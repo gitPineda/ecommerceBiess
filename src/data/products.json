@@ -1,0 +1,62 @@
+[
+  {
+    "id": "prd-001",
+    "name": "Auriculares Wave Pro",
+    "sku": "WAVE-PRO-01",
+    "category": "Audio",
+    "price": 89.9,
+    "stock": 18,
+    "featured": true,
+    "description": "Auriculares inalambricos con cancelacion pasiva de ruido y autonomia extendida."
+  },
+  {
+    "id": "prd-002",
+    "name": "Smartwatch Pulse X",
+    "sku": "PULSE-X-02",
+    "category": "Wearables",
+    "price": 129.5,
+    "stock": 9,
+    "featured": true,
+    "description": "Reloj inteligente con monitoreo diario, notificaciones y resistencia al agua."
+  },
+  {
+    "id": "prd-003",
+    "name": "Mochila Urban Tech",
+    "sku": "URBAN-TECH-03",
+    "category": "Accesorios",
+    "price": 54,
+    "stock": 15,
+    "featured": false,
+    "description": "Mochila con compartimentos acolchados para laptop, accesorios y uso diario."
+  },
+  {
+    "id": "prd-004",
+    "name": "Camara Mini Home",
+    "sku": "MINI-HOME-04",
+    "category": "Hogar",
+    "price": 74.99,
+    "stock": 12,
+    "featured": true,
+    "description": "Camara compacta para interiores con vision nocturna y audio bidireccional."
+  },
+  {
+    "id": "prd-005",
+    "name": "Teclado Slim Mechanical",
+    "sku": "SLIM-MECH-05",
+    "category": "Computo",
+    "price": 99.4,
+    "stock": 7,
+    "featured": false,
+    "description": "Teclado mecanico compacto para productividad con perfil bajo y retroiluminacion."
+  },
+  {
+    "id": "prd-006",
+    "name": "Botella Smart Hydrate",
+    "sku": "HYDRATE-06",
+    "category": "Lifestyle",
+    "price": 38.75,
+    "stock": 23,
+    "featured": false,
+    "description": "Botella termica con recordatorios de hidratacion y tapa a prueba de fugas."
+  }
+]

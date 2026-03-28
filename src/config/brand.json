@@ -1,0 +1,52 @@
+{
+  "appName": "Biess Commerce",
+  "shortName": "BIESS",
+  "slug": "biess-commerce-white-label",
+  "tagline": "Ecommerce movil limpio, modular y listo para personalizar",
+  "welcomeTitle": "Tu tienda, tu marca, tu ritmo",
+  "welcomeMessage": "Base Expo escalable para operar hoy con datos mock y crecer manana con Supabase o APIs reales.",
+  "supportEmail": "soporte@biess.local",
+  "currency": "USD",
+  "currencySymbol": "$",
+  "defaultLocale": "es-EC",
+  "logoText": "BIESS",
+  "bundleIdentifiers": {
+    "ios": "com.biess.commerce",
+    "android": "com.biess.commerce"
+  },
+  "roles": {
+    "admin": "admin",
+    "customer": "customer"
+  },
+  "demoCredentials": {
+    "admin": {
+      "username": "admin",
+      "password": "Admin123*"
+    },
+    "customer": {
+      "username": "cliente",
+      "password": "Cliente123*"
+    }
+  },
+  "palette": {
+    "primary": "#0F766E",
+    "primaryDark": "#134E4A",
+    "secondary": "#F97316",
+    "accent": "#0EA5E9",
+    "background": "#F3F7F6",
+    "surface": "#FFFFFF",
+    "surfaceAlt": "#E6F4F1",
+    "text": "#102A43",
+    "muted": "#64748B",
+    "border": "#D9E2EC",
+    "danger": "#DC2626",
+    "success": "#15803D",
+    "warning": "#B45309"
+  },
+  "assets": {
+    "icon": "./assets/images/icon.png",
+    "adaptiveIcon": "./assets/images/adaptive-icon.png",
+    "splash": "./assets/images/splash-icon.png",
+    "favicon": "./assets/images/favicon.png"
+  }
+}

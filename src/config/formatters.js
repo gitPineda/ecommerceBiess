@@ -9,3 +9,7 @@ const currencyFormatter = new Intl.NumberFormat(brand.defaultLocale, {
 export function formatCurrency(value) {
   return currencyFormatter.format(Number(value || 0));
 }
+
+export function formatPercentage(value) {
+  return `${Number(value || 0)}%`;
+}

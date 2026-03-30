@@ -16,6 +16,8 @@ const INITIAL_FORM = {
   stock: '',
   description: '',
   featured: false,
+  isPromotion: false,
+  promotionDiscount: '',
 };
 
 export default function ProductManagementScreen() {
@@ -43,6 +45,10 @@ export default function ProductManagementScreen() {
 
     if (Number(form.price) <= 0 || Number(form.stock) <= 0) {
       return 'El precio y stock deben ser mayores a cero.';
+    }
+
+    if (form.isPromotion && (Number(form.promotionDiscount) <= 0 || Number(form.promotionDiscount) > 90)) {
+      return 'Si el producto esta en promocion, el descuento debe ser mayor a 0 y menor o igual a 90.';
     }
 
     return '';
@@ -135,6 +141,25 @@ export default function ProductManagementScreen() {
           </Text>
         </Pressable>
 
+        <Pressable
+          style={[styles.toggle, form.isPromotion && styles.toggleActive]}
+          onPress={() => updateField('isPromotion', !form.isPromotion)}
+        >
+          <Text style={[styles.toggleText, form.isPromotion && styles.toggleTextActive]}>
+            {form.isPromotion ? 'Promocion activa: SI' : 'Promocion activa: NO'}
+          </Text>
+        </Pressable>
+
+        {form.isPromotion ? (
+          <AppTextInput
+            label="Descuento de promocion (%)"
+            value={form.promotionDiscount}
+            onChangeText={(value) => updateField('promotionDiscount', value)}
+            keyboardType="number-pad"
+            placeholder="10"
+          />
+        ) : null}
+
         <PrimaryButton title="Guardar producto" onPress={handleSave} />
       </View>
 
@@ -148,7 +173,10 @@ export default function ProductManagementScreen() {
             <View style={styles.itemCopy}>
               <Text style={styles.itemTitle}>{product.name}</Text>
               <Text style={styles.itemMeta}>
-                {product.category} | {product.sku}
+                {product.category} | {product.sku} |{' '}
+                {product.isPromotion
+                  ? `Promo ${product.promotionDiscount}%`
+                  : 'Sin promocion'}
               </Text>
             </View>
             <Text style={styles.itemPrice}>{formatCurrency(product.price)}</Text>

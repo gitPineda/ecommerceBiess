@@ -3,8 +3,15 @@ import brand from '../config/brand.json';
 import { authenticateUser } from '../services/authService';
 import { bootstrapCatalog } from '../services/catalogService';
 import { processCheckout } from '../services/checkoutService';
+import { createProductFromPayload } from '../services/productUtils';
 import { appReducer, initialState } from './appReducer';
-import { findProductById, getCartSummary } from './selectors';
+import {
+  findProductById,
+  getAvailableCategories,
+  getCartSummary,
+  getLatestProducts,
+  getProductPricing,
+} from './selectors';
 import { loadPersistedState, persistCart, persistCatalog, persistSession } from './storage';
 
 const AppStoreContext = createContext(null);
@@ -89,6 +96,8 @@ export function AppStoreProvider({ children }) {
 
   const cartSummary = getCartSummary(state.cartItems);
   const featuredProducts = state.products.filter((product) => product.featured);
+  const latestProducts = getLatestProducts(state.products, 5);
+  const productCategories = getAvailableCategories(state.products);
 
   async function signIn(credentials) {
     dispatch({ type: 'AUTH_START' });
@@ -124,16 +133,11 @@ export function AppStoreProvider({ children }) {
       throw new Error('El producto ya existe. Usa un nombre o SKU distinto.');
     }
 
-    const product = {
-      id: `prd-${Date.now()}`,
+    const product = createProductFromPayload({
+      ...payload,
       name,
       sku,
-      category: payload.category.trim(),
-      price: Number(payload.price),
-      stock: Number(payload.stock),
-      featured: Boolean(payload.featured),
-      description: payload.description.trim(),
-    };
+    });
 
     dispatch({ type: 'ADD_PRODUCT', payload: product });
     return product;
@@ -166,11 +170,14 @@ export function AppStoreProvider({ children }) {
       throw new Error('Producto no encontrado.');
     }
 
+    const pricing = getProductPricing(product);
+
     dispatch({
       type: 'ADD_TO_CART',
       payload: {
         product,
         quantity,
+        unitPrice: pricing.finalPrice,
       },
     });
   }
@@ -246,6 +253,8 @@ export function AppStoreProvider({ children }) {
         lastOrder: state.lastOrder,
         cartSummary,
         featuredProducts,
+        latestProducts,
+        productCategories,
         isAuthenticated: Boolean(state.user),
         isAdmin: state.user?.role === brand.roles.admin,
         isCustomer: state.user?.role === brand.roles.customer,

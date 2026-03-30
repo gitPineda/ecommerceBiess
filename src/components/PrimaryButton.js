@@ -26,6 +26,7 @@ export default function PrimaryButton({
   disabled = false,
   loading = false,
   tone = 'primary',
+  size = 'md',
 }) {
   const palette = TONES[tone] || TONES.primary;
   const isDisabled = disabled || loading;
@@ -36,6 +37,7 @@ export default function PrimaryButton({
       disabled={isDisabled}
       style={({ pressed }) => [
         styles.button,
+        size === 'sm' && styles.buttonSmall,
         {
           backgroundColor: palette.backgroundColor,
           borderColor: palette.borderColor,
@@ -46,7 +48,15 @@ export default function PrimaryButton({
       {loading ? (
         <ActivityIndicator color={palette.textColor} />
       ) : (
-        <Text style={[styles.label, { color: palette.textColor }]}>{title}</Text>
+        <Text
+          style={[
+            styles.label,
+            size === 'sm' && styles.labelSmall,
+            { color: palette.textColor },
+          ]}
+        >
+          {title}
+        </Text>
       )}
     </Pressable>
   );
@@ -61,7 +71,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: spacing.lg,
   },
+  buttonSmall: {
+    minHeight: 42,
+    paddingHorizontal: spacing.md,
+  },
   label: {
     ...typography.button,
+  },
+  labelSmall: {
+    fontSize: 14,
+    lineHeight: 18,
   },
 });

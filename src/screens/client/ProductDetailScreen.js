@@ -4,9 +4,10 @@ import { Ionicons } from '@expo/vector-icons';
 import EmptyState from '../../components/EmptyState';
 import PrimaryButton from '../../components/PrimaryButton';
 import ScreenContainer from '../../components/ScreenContainer';
-import { formatCurrency } from '../../config/formatters';
+import { formatCurrency, formatPercentage } from '../../config/formatters';
+import { getCategoryMeta } from '../../config/productCategories';
 import { useAppStore } from '../../store/AppStore';
-import { findProductById } from '../../store/selectors';
+import { findProductById, getProductPricing } from '../../store/selectors';
 import { colors, radius, spacing, typography } from '../../theme';
 
 export default function ProductDetailScreen({ route, navigation }) {
@@ -26,16 +27,31 @@ export default function ProductDetailScreen({ route, navigation }) {
     );
   }
 
+  const categoryMeta = getCategoryMeta(product.categoryId, product.category);
+  const pricing = getProductPricing(product);
+
   return (
     <ScreenContainer scroll contentContainerStyle={styles.content}>
       <View style={styles.visual}>
-        <Ionicons name="cube-outline" size={72} color={colors.primary} />
+        <Ionicons name={categoryMeta.icon} size={72} color={colors.primary} />
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.category}>{product.category}</Text>
+        <Text style={styles.category}>{categoryMeta.label}</Text>
         <Text style={styles.title}>{product.name}</Text>
-        <Text style={styles.price}>{formatCurrency(product.price)}</Text>
+        {pricing.hasPromotion ? (
+          <View style={styles.priceGroup}>
+            <Text style={styles.originalPrice}>{formatCurrency(pricing.originalPrice)}</Text>
+            <Text style={styles.price}>{formatCurrency(pricing.finalPrice)}</Text>
+            <View style={styles.promoBadge}>
+              <Text style={styles.promoBadgeText}>
+                Ahorra {formatPercentage(pricing.discount)}
+              </Text>
+            </View>
+          </View>
+        ) : (
+          <Text style={styles.price}>{formatCurrency(pricing.finalPrice)}</Text>
+        )}
         <Text style={styles.description}>{product.description}</Text>
 
         <View style={styles.metaRow}>
@@ -45,6 +61,11 @@ export default function ProductDetailScreen({ route, navigation }) {
           <View style={styles.metaChip}>
             <Text style={styles.metaText}>Stock: {product.stock}</Text>
           </View>
+          {pricing.hasPromotion ? (
+            <View style={styles.metaChip}>
+              <Text style={styles.metaText}>Promo activa</Text>
+            </View>
+          ) : null}
         </View>
 
         <PrimaryButton title="Agregar al carrito" onPress={() => addToCart(product.id)} />
@@ -85,6 +106,25 @@ const styles = StyleSheet.create({
   },
   price: {
     ...typography.title,
+    color: colors.secondary,
+  },
+  priceGroup: {
+    gap: spacing.sm,
+  },
+  originalPrice: {
+    ...typography.body,
+    color: colors.muted,
+    textDecorationLine: 'line-through',
+  },
+  promoBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.pill,
+    backgroundColor: '#FDE5D3',
+  },
+  promoBadgeText: {
+    ...typography.caption,
     color: colors.secondary,
   },
   description: {

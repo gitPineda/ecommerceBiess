@@ -109,7 +109,7 @@ export function appReducer(state, action) {
             productId: action.payload.product.id,
             name: action.payload.product.name,
             category: action.payload.product.category,
-            price: action.payload.product.price,
+            price: action.payload.unitPrice,
             quantity: clampQuantity(action.payload.quantity, action.payload.product.stock),
           },
         ],

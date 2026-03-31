@@ -5,12 +5,23 @@ import PrimaryButton from '../../components/PrimaryButton';
 import QuantitySelector from '../../components/QuantitySelector';
 import ScreenContainer from '../../components/ScreenContainer';
 import { formatCurrency } from '../../config/formatters';
+import { showStockInsufficientAlert } from '../../services/cartAlerts';
 import { useAppStore } from '../../store/AppStore';
 import { findProductById } from '../../store/selectors';
 import { colors, radius, spacing, typography } from '../../theme';
 
 export default function CartScreen({ navigation }) {
   const { cartItems, products, cartSummary, updateCartQuantity, removeFromCart } = useAppStore();
+
+  function handleIncrease(item) {
+    try {
+      updateCartQuantity(item.productId, item.quantity + 1);
+    } catch (error) {
+      showStockInsufficientAlert(
+        error.message || 'No hay stock suficiente para este producto.',
+      );
+    }
+  }
 
   if (!cartItems.length) {
     return (
@@ -47,7 +58,7 @@ export default function CartScreen({ navigation }) {
               <QuantitySelector
                 value={item.quantity}
                 onDecrease={() => updateCartQuantity(item.productId, item.quantity - 1)}
-                onIncrease={() => updateCartQuantity(item.productId, item.quantity + 1)}
+                onIncrease={() => handleIncrease(item)}
               />
               <Text style={styles.itemPrice}>
                 {formatCurrency(item.price * item.quantity)}

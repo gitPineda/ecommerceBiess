@@ -17,7 +17,7 @@ export default function ProductCard({ product, onPress, onAddToCart }) {
         <Text style={styles.category}>{categoryMeta.label}</Text>
         {pricing.hasPromotion ? (
           <View style={styles.promoBadge}>
-            <Text style={styles.promoText}>-{formatPercentage(pricing.discount)}</Text>
+            <Text style={styles.promoText}>Promo {formatPercentage(pricing.discount)}</Text>
           </View>
         ) : null}
       </View>
@@ -43,7 +43,12 @@ export default function ProductCard({ product, onPress, onAddToCart }) {
       <View style={styles.footer}>
         <View>
           {pricing.hasPromotion ? (
-            <Text style={styles.originalPrice}>{formatCurrency(pricing.originalPrice)}</Text>
+            <>
+              <Text style={styles.originalPrice}>{formatCurrency(pricing.originalPrice)}</Text>
+              <Text style={styles.promoNote}>
+                Descuento activo: {formatPercentage(pricing.discount)}
+              </Text>
+            </>
           ) : null}
           <Text style={styles.price}>{formatCurrency(pricing.finalPrice)}</Text>
           <Text style={styles.stock}>Stock: {product.stock}</Text>
@@ -127,6 +132,10 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.muted,
     textDecorationLine: 'line-through',
+  },
+  promoNote: {
+    ...typography.caption,
+    color: colors.secondary,
   },
   stock: {
     ...typography.caption,

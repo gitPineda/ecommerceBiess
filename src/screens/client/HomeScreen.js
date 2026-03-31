@@ -8,6 +8,7 @@ import ProductCard from '../../components/ProductCard';
 import SearchBar from '../../components/SearchBar';
 import ScreenContainer from '../../components/ScreenContainer';
 import brand from '../../config/brand.json';
+import { confirmAddProductToCart } from '../../services/cartAlerts';
 import { useAppStore } from '../../store/AppStore';
 import { filterProducts } from '../../store/selectors';
 import { colors, radius, spacing, typography } from '../../theme';
@@ -16,6 +17,7 @@ export default function HomeScreen({ navigation }) {
   const {
     user,
     products,
+    cartItems,
     addToCart,
     cartSummary,
     state,
@@ -39,6 +41,14 @@ export default function HomeScreen({ navigation }) {
     categoryId: selectedCategory,
   });
   const promotionalCount = products.filter((product) => product.isPromotion).length;
+
+  function handleAddToCart(product) {
+    confirmAddProductToCart({
+      product,
+      cartItems,
+      addToCart,
+    });
+  }
 
   return (
     <ScreenContainer scroll contentContainerStyle={styles.content}>
@@ -69,7 +79,7 @@ export default function HomeScreen({ navigation }) {
         onSelectProduct={(productId) =>
           navigation.navigate('DetalleProducto', { productId })
         }
-        onAddToCart={(productId) => addToCart(productId)}
+        onAddToCart={handleAddToCart}
       />
 
       <View style={styles.sectionHeader}>
@@ -99,7 +109,7 @@ export default function HomeScreen({ navigation }) {
             key={product.id}
             product={product}
             onPress={() => navigation.navigate('DetalleProducto', { productId: product.id })}
-            onAddToCart={() => addToCart(product.id)}
+            onAddToCart={() => handleAddToCart(product)}
           />
         ))
       ) : (

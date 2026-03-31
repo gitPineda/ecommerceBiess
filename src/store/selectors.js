@@ -19,6 +19,11 @@ export function findProductById(products, productId) {
   return products.find((product) => product.id === productId);
 }
 
+export function getCartItemQuantity(cartItems, productId) {
+  const cartItem = cartItems.find((item) => item.productId === productId);
+  return Number(cartItem?.quantity || 0);
+}
+
 export function getProductPricing(product) {
   const originalPrice = Number(product?.price || 0);
   const hasPromotion =

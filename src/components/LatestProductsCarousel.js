@@ -27,7 +27,7 @@ export default function LatestProductsCarousel({ products, onSelectProduct, onAd
                       {pricing.hasPromotion ? (
                         <View style={styles.promoBadge}>
                           <Text style={styles.promoBadgeText}>
-                            -{formatPercentage(pricing.discount)}
+                            Promo {formatPercentage(pricing.discount)}
                           </Text>
                         </View>
                       ) : null}
@@ -60,7 +60,7 @@ export default function LatestProductsCarousel({ products, onSelectProduct, onAd
                   </View>
                   <PrimaryButton
                     title="Agregar"
-                    onPress={() => onAddToCart(product.id)}
+                    onPress={() => onAddToCart(product)}
                     size="sm"
                   />
                 </View>

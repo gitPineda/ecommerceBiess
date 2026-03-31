@@ -5,13 +5,14 @@ import EmptyState from '../../components/EmptyState';
 import PrimaryButton from '../../components/PrimaryButton';
 import ScreenContainer from '../../components/ScreenContainer';
 import { formatCurrency, formatPercentage } from '../../config/formatters';
+import { confirmAddProductToCart } from '../../services/cartAlerts';
 import { getCategoryMeta } from '../../config/productCategories';
 import { useAppStore } from '../../store/AppStore';
 import { findProductById, getProductPricing } from '../../store/selectors';
 import { colors, radius, spacing, typography } from '../../theme';
 
 export default function ProductDetailScreen({ route, navigation }) {
-  const { products, addToCart } = useAppStore();
+  const { products, cartItems, addToCart } = useAppStore();
   const product = findProductById(products, route.params?.productId);
 
   if (!product) {
@@ -30,6 +31,14 @@ export default function ProductDetailScreen({ route, navigation }) {
   const categoryMeta = getCategoryMeta(product.categoryId, product.category);
   const pricing = getProductPricing(product);
 
+  function handleAddToCart() {
+    confirmAddProductToCart({
+      product,
+      cartItems,
+      addToCart,
+    });
+  }
+
   return (
     <ScreenContainer scroll contentContainerStyle={styles.content}>
       <View style={styles.visual}>
@@ -37,10 +46,28 @@ export default function ProductDetailScreen({ route, navigation }) {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.category}>{categoryMeta.label}</Text>
+        <View style={styles.badgeRow}>
+          <View style={styles.metaChip}>
+            <Text style={styles.metaText}>{categoryMeta.label}</Text>
+          </View>
+          <View style={styles.metaChip}>
+            <Text style={styles.metaText}>Stock: {product.stock}</Text>
+          </View>
+          {pricing.hasPromotion ? (
+            <View style={[styles.metaChip, styles.promoChip]}>
+              <Text style={styles.promoChipText}>
+                Promocion {formatPercentage(pricing.discount)}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+
         <Text style={styles.title}>{product.name}</Text>
         {pricing.hasPromotion ? (
           <View style={styles.priceGroup}>
+            <Text style={styles.promoLead}>
+              Producto en promocion con {formatPercentage(pricing.discount)} de descuento
+            </Text>
             <Text style={styles.originalPrice}>{formatCurrency(pricing.originalPrice)}</Text>
             <Text style={styles.price}>{formatCurrency(pricing.finalPrice)}</Text>
             <View style={styles.promoBadge}>
@@ -58,17 +85,9 @@ export default function ProductDetailScreen({ route, navigation }) {
           <View style={styles.metaChip}>
             <Text style={styles.metaText}>SKU: {product.sku}</Text>
           </View>
-          <View style={styles.metaChip}>
-            <Text style={styles.metaText}>Stock: {product.stock}</Text>
-          </View>
-          {pricing.hasPromotion ? (
-            <View style={styles.metaChip}>
-              <Text style={styles.metaText}>Promo activa</Text>
-            </View>
-          ) : null}
         </View>
 
-        <PrimaryButton title="Agregar al carrito" onPress={() => addToCart(product.id)} />
+        <PrimaryButton title="Agregar al carrito" onPress={handleAddToCart} />
       </View>
     </ScreenContainer>
   );
@@ -96,9 +115,10 @@ const styles = StyleSheet.create({
     padding: spacing.xxl,
     gap: spacing.lg,
   },
-  category: {
-    ...typography.caption,
-    color: colors.primary,
+  badgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
   },
   title: {
     ...typography.display,
@@ -110,6 +130,10 @@ const styles = StyleSheet.create({
   },
   priceGroup: {
     gap: spacing.sm,
+  },
+  promoLead: {
+    ...typography.bodyStrong,
+    color: colors.secondary,
   },
   originalPrice: {
     ...typography.body,
@@ -142,8 +166,15 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     backgroundColor: colors.background,
   },
+  promoChip: {
+    backgroundColor: '#FDE5D3',
+  },
   metaText: {
     ...typography.caption,
     color: colors.text,
+  },
+  promoChipText: {
+    ...typography.caption,
+    color: colors.secondary,
   },
 });

@@ -9,12 +9,25 @@ import {
   findProductById,
   getAvailableCategories,
   getCartSummary,
+  getCartItemQuantity,
   getLatestProducts,
   getProductPricing,
 } from './selectors';
 import { loadPersistedState, persistCart, persistCatalog, persistSession } from './storage';
 
 const AppStoreContext = createContext(null);
+
+function buildInsufficientStockMessage(product, availableUnits, isAdditional = false) {
+  if (availableUnits <= 0) {
+    return `No hay stock suficiente de ${product.name}.`;
+  }
+
+  if (isAdditional) {
+    return `No hay stock suficiente de ${product.name}. Solo puedes agregar ${availableUnits} unidad(es) adicional(es).`;
+  }
+
+  return `No hay stock suficiente de ${product.name}. Solo quedan ${availableUnits} unidad(es) disponibles.`;
+}
 
 export function AppStoreProvider({ children }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
@@ -170,6 +183,15 @@ export function AppStoreProvider({ children }) {
       throw new Error('Producto no encontrado.');
     }
 
+    const currentQuantity = getCartItemQuantity(state.cartItems, productId);
+    const availableUnits = Math.max(Number(product.stock || 0) - currentQuantity, 0);
+
+    if (availableUnits < quantity) {
+      throw new Error(
+        buildInsufficientStockMessage(product, availableUnits, currentQuantity > 0),
+      );
+    }
+
     const pricing = getProductPricing(product);
 
     dispatch({
@@ -196,6 +218,14 @@ export function AppStoreProvider({ children }) {
     if (quantity <= 0) {
       dispatch({ type: 'REMOVE_FROM_CART', payload: productId });
       return;
+    }
+
+    if (quantity > Number(product.stock || 0)) {
+      const currentQuantity = getCartItemQuantity(state.cartItems, productId);
+      const availableUnits = Math.max(Number(product.stock || 0) - currentQuantity, 0);
+      throw new Error(
+        buildInsufficientStockMessage(product, availableUnits, true),
+      );
     }
 
     dispatch({

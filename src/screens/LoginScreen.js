@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -16,30 +16,52 @@ import brand from '../config/brand.json';
 import { useAppStore } from '../store/AppStore';
 import { colors, radius, spacing, typography } from '../theme';
 
-export default function LoginScreen() {
+export default function LoginScreen({ navigation, route }) {
   const { signIn, state, clearAppError } = useAppStore();
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [feedback, setFeedback] = useState('');
+
+  useEffect(() => {
+    if (!route?.params) {
+      return;
+    }
+
+    if (route.params.prefillIdentifier) {
+      setIdentifier(route.params.prefillIdentifier);
+    }
+
+    if (route.params.feedback) {
+      setFeedback(route.params.feedback);
+    }
+
+    navigation.setParams({
+      prefillIdentifier: undefined,
+      feedback: undefined,
+    });
+  }, [navigation, route?.params]);
 
   function fillDemo(role) {
-    setUsername(brand.demoCredentials[role].username);
+    setIdentifier(brand.demoCredentials[role].username);
     setPassword(brand.demoCredentials[role].password);
     setError('');
+    setFeedback('');
     clearAppError();
   }
 
   async function handleLogin() {
     clearAppError();
     setError('');
+    setFeedback('');
 
-    if (!username.trim() || !password.trim()) {
-      setError('Ingresa usuario y clave para continuar.');
+    if (!identifier.trim() || !password.trim()) {
+      setError('Ingresa usuario o correo y clave para continuar.');
       return;
     }
 
     try {
-      await signIn({ username, password });
+      await signIn({ identifier, password });
     } catch (loginError) {
       setError(loginError.message);
     }
@@ -65,21 +87,34 @@ export default function LoginScreen() {
             </Text>
           </View>
 
-          <ErrorBanner message={error || state.appError} />
+          <ErrorBanner
+            message={feedback || error || state.appError}
+            tone={feedback ? 'success' : 'danger'}
+          />
 
           <AppTextInput
-            label="Usuario"
-            value={username}
-            onChangeText={setUsername}
+            label="Usuario o correo"
+            value={identifier}
+            onChangeText={(value) => {
+              setIdentifier(value);
+              if (feedback) {
+                setFeedback('');
+              }
+            }}
             autoCapitalize="none"
             autoCorrect={false}
-            placeholder="Ej. admin"
+            placeholder="Ej. admin o correo@dominio.com"
           />
 
           <AppTextInput
             label="Clave"
             value={password}
-            onChangeText={setPassword}
+            onChangeText={(value) => {
+              setPassword(value);
+              if (feedback) {
+                setFeedback('');
+              }
+            }}
             secureTextEntry
             autoCapitalize="none"
             placeholder="Ingresa tu clave"
@@ -90,6 +125,15 @@ export default function LoginScreen() {
             onPress={handleLogin}
             loading={state.isAuthenticating}
           />
+
+          <View style={styles.authActions}>
+            <Pressable onPress={() => navigation.navigate('CreateUser')}>
+              <Text style={styles.authActionText}>Crear usuario</Text>
+            </Pressable>
+            <Pressable onPress={() => navigation.navigate('ForgotPassword')}>
+              <Text style={styles.authActionText}>Recuperar contrasena</Text>
+            </Pressable>
+          </View>
 
           <View style={styles.demoSection}>
             <Text style={styles.demoLabel}>Credenciales demo</Text>
@@ -166,6 +210,15 @@ const styles = StyleSheet.create({
   },
   demoSection: {
     gap: spacing.md,
+  },
+  authActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  authActionText: {
+    ...typography.bodyStrong,
+    color: colors.primary,
   },
   demoLabel: {
     ...typography.bodyStrong,

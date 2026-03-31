@@ -17,6 +17,30 @@ import { loadPersistedState, persistCart, persistCatalog, persistSession } from 
 
 const AppStoreContext = createContext(null);
 
+function buildBaseUsername(email = '') {
+  const normalizedBase = email
+    .trim()
+    .toLowerCase()
+    .split('@')[0]
+    .replace(/[^a-z0-9._-]/g, '');
+
+  return normalizedBase || 'cliente';
+}
+
+function buildUniqueUsername(users, baseUsername) {
+  let suffix = 0;
+  let candidate = baseUsername;
+
+  while (
+    users.some((user) => user.username.toLowerCase() === candidate.toLowerCase())
+  ) {
+    suffix += 1;
+    candidate = `${baseUsername}${suffix}`;
+  }
+
+  return candidate;
+}
+
 function buildInsufficientStockMessage(product, availableUnits, isAdditional = false) {
   if (availableUnits <= 0) {
     return `No hay stock suficiente de ${product.name}.`;
@@ -157,19 +181,31 @@ export function AppStoreProvider({ children }) {
   }
 
   function addUser(payload) {
-    const username = payload.username.trim().toLowerCase();
+    const email = payload.email.trim().toLowerCase();
+    const requestedUsername = payload.username?.trim().toLowerCase() || '';
 
-    if (state.users.some((user) => user.username.toLowerCase() === username)) {
+    if (state.users.some((user) => user.email.toLowerCase() === email)) {
+      throw new Error('El correo ya existe.');
+    }
+
+    if (
+      requestedUsername &&
+      state.users.some((user) => user.username.toLowerCase() === requestedUsername)
+    ) {
       throw new Error('El nombre de usuario ya existe.');
     }
+
+    const username = requestedUsername
+      ? requestedUsername
+      : buildUniqueUsername(state.users, buildBaseUsername(email));
 
     const user = {
       id: `usr-${Date.now()}`,
       name: payload.name.trim(),
       username,
       password: payload.password,
-      role: payload.role,
-      email: payload.email.trim().toLowerCase(),
+      role: payload.role || brand.roles.customer,
+      email,
     };
 
     dispatch({ type: 'ADD_USER', payload: user });

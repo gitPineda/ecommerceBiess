@@ -8,15 +8,26 @@ function sanitizeUser(user) {
 export async function authenticateUser(credentials, users) {
   await new Promise((resolve) => setTimeout(resolve, AUTH_DELAY_MS));
 
-  const normalizedUsername = credentials.username.trim().toLowerCase();
+  const normalizedIdentifier = (
+    credentials.identifier ||
+    credentials.username ||
+    credentials.email ||
+    ''
+  )
+    .trim()
+    .toLowerCase();
+
   const candidate = users.find(
     (user) =>
-      user.username.toLowerCase() === normalizedUsername &&
+      (
+        user.username.toLowerCase() === normalizedIdentifier ||
+        user.email.toLowerCase() === normalizedIdentifier
+      ) &&
       user.password === credentials.password,
   );
 
   if (!candidate) {
-    throw new Error('Credenciales incorrectas. Verifica usuario y clave.');
+    throw new Error('Credenciales incorrectas. Verifica usuario/correo y clave.');
   }
 
   return sanitizeUser(candidate);

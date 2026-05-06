@@ -39,9 +39,49 @@ export const PRODUCT_CATEGORY_META = {
     label: 'Lifestyle',
     icon: 'leaf-outline',
   },
+  despensa: {
+    label: 'Despensa',
+    icon: 'basket-outline',
+  },
+  bebidas: {
+    label: 'Bebidas',
+    icon: 'wine-outline',
+  },
+  snacks: {
+    label: 'Snacks',
+    icon: 'fast-food-outline',
+  },
+  hogar: {
+    label: 'Hogar',
+    icon: 'home-outline',
+  },
 };
 
-export function getCategoryMeta(categoryId, fallbackLabel = 'General') {
+export const PRODUCT_CATEGORY_ICON_OPTIONS = [
+  { id: 'cube-outline', label: 'General' },
+  { id: 'basket-outline', label: 'Despensa' },
+  { id: 'wine-outline', label: 'Bebidas' },
+  { id: 'fast-food-outline', label: 'Snacks' },
+  { id: 'home-outline', label: 'Hogar' },
+  { id: 'headset-outline', label: 'Audio' },
+  { id: 'watch-outline', label: 'Wearables' },
+  { id: 'briefcase-outline', label: 'Accesorios' },
+  { id: 'laptop-outline', label: 'Computo' },
+  { id: 'camera-outline', label: 'Fotografia' },
+  { id: 'game-controller-outline', label: 'Gaming' },
+  { id: 'document-text-outline', label: 'Oficina' },
+  { id: 'bicycle-outline', label: 'Movilidad' },
+  { id: 'leaf-outline', label: 'Lifestyle' },
+];
+
+export function getCategoryMeta(categoryId, fallbackLabel = 'General', iconOverride = '') {
+  if (iconOverride) {
+    return {
+      label: fallbackLabel,
+      icon: iconOverride,
+    };
+  }
+
   return (
     PRODUCT_CATEGORY_META[categoryId] || {
       label: fallbackLabel,

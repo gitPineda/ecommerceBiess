@@ -4,6 +4,7 @@ import {
   IsArray,
   IsInt,
   IsObject,
+  IsOptional,
   IsString,
   Min,
   ValidateNested,
@@ -22,6 +23,14 @@ class CreateOrderItemDto {
 export class CreateOrderDto {
   @IsString()
   paymentMethod!: string;
+
+  @IsOptional()
+  @IsString()
+  phoneNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  countryCode?: string;
 
   @IsObject()
   shippingAddress!: Record<string, unknown>;

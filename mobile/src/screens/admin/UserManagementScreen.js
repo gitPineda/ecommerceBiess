@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import AppSelectInput from '../../components/AppSelectInput';
 import AppTextInput from '../../components/AppTextInput';
 import ErrorBanner from '../../components/ErrorBanner';
 import PrimaryButton from '../../components/PrimaryButton';
 import ScreenContainer from '../../components/ScreenContainer';
 import brand from '../../config/brand.json';
+import { ROLE_OPTIONS, getRoleLabel, isAdminRole } from '../../config/roles';
 import { useAppStore } from '../../store/AppStore';
-import { colors, radius, spacing, typography } from '../../theme';
+import { useThemedStyles } from '../../theme';
 
 const INITIAL_FORM = {
   name: '',
@@ -18,6 +20,7 @@ const INITIAL_FORM = {
 
 export default function UserManagementScreen() {
   const { addUser, users } = useAppStore();
+  const styles = useThemedStyles(createStyles);
   const [form, setForm] = useState(INITIAL_FORM);
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState('');
@@ -71,7 +74,7 @@ export default function UserManagementScreen() {
       <View style={styles.sectionCard}>
         <Text style={styles.title}>Ingreso de usuarios</Text>
         <Text style={styles.subtitle}>
-          Registra administradores o clientes para pruebas del flujo de autenticacion.
+          Registra clientes, vendedores, administradores o superadministradores.
         </Text>
 
         <ErrorBanner message={error || feedback} tone={feedback ? 'success' : 'danger'} />
@@ -105,43 +108,12 @@ export default function UserManagementScreen() {
           placeholder="Minimo 6 caracteres"
         />
 
-        <View style={styles.roleSelector}>
-          <Text style={styles.roleLabel}>Rol</Text>
-          <View style={styles.roleRow}>
-            <Pressable
-              style={[
-                styles.roleChip,
-                form.role === brand.roles.customer && styles.roleChipActive,
-              ]}
-              onPress={() => updateField('role', brand.roles.customer)}
-            >
-              <Text
-                style={[
-                  styles.roleChipText,
-                  form.role === brand.roles.customer && styles.roleChipTextActive,
-                ]}
-              >
-                Cliente
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.roleChip,
-                form.role === brand.roles.admin && styles.roleChipActive,
-              ]}
-              onPress={() => updateField('role', brand.roles.admin)}
-            >
-              <Text
-                style={[
-                  styles.roleChipText,
-                  form.role === brand.roles.admin && styles.roleChipTextActive,
-                ]}
-              >
-                Administrador
-              </Text>
-            </Pressable>
-          </View>
-        </View>
+        <AppSelectInput
+          label="Rol"
+          value={form.role}
+          options={ROLE_OPTIONS}
+          onChange={(value) => updateField('role', value)}
+        />
 
         <PrimaryButton title="Guardar usuario" onPress={handleSave} loading={isSaving} />
       </View>
@@ -161,16 +133,28 @@ export default function UserManagementScreen() {
             <View
               style={[
                 styles.roleBadge,
-                item.role === brand.roles.admin ? styles.adminBadge : styles.clientBadge,
+                item.role === brand.roles.superadmin
+                  ? styles.superAdminBadge
+                  : isAdminRole(item.role)
+                    ? styles.adminBadge
+                    : item.role === brand.roles.seller
+                    ? styles.sellerBadge
+                    : styles.clientBadge,
               ]}
             >
               <Text
                 style={[
                   styles.roleBadgeText,
-                  item.role === brand.roles.admin ? styles.adminBadgeText : styles.clientBadgeText,
+                  item.role === brand.roles.superadmin
+                    ? styles.superAdminBadgeText
+                    : isAdminRole(item.role)
+                      ? styles.adminBadgeText
+                      : item.role === brand.roles.seller
+                      ? styles.sellerBadgeText
+                      : styles.clientBadgeText,
                 ]}
               >
-                {item.role}
+                {getRoleLabel(item.role)}
               </Text>
             </View>
           </View>
@@ -180,98 +164,79 @@ export default function UserManagementScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  content: {
-    gap: spacing.lg,
-  },
-  sectionCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    padding: spacing.xxl,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: spacing.lg,
-  },
-  title: {
-    ...typography.title,
-    color: colors.text,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.muted,
-  },
-  roleSelector: {
-    gap: spacing.sm,
-  },
-  roleLabel: {
-    ...typography.bodyStrong,
-    color: colors.text,
-  },
-  roleRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  roleChip: {
-    flex: 1,
-    minHeight: 48,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.background,
-  },
-  roleChipActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.surfaceAlt,
-  },
-  roleChipText: {
-    ...typography.bodyStrong,
-    color: colors.text,
-  },
-  roleChipTextActive: {
-    color: colors.primary,
-  },
-  userCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.md,
-    backgroundColor: colors.background,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-  },
-  userCopy: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  userName: {
-    ...typography.bodyStrong,
-    color: colors.text,
-  },
-  userMeta: {
-    ...typography.caption,
-    color: colors.muted,
-  },
-  roleBadge: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-  },
-  adminBadge: {
-    backgroundColor: '#E7F1FF',
-  },
-  clientBadge: {
-    backgroundColor: '#EAF8EF',
-  },
-  roleBadgeText: {
-    ...typography.caption,
-    textTransform: 'capitalize',
-  },
-  adminBadgeText: {
-    color: '#1D4ED8',
-  },
-  clientBadgeText: {
-    color: colors.success,
-  },
-});
+const createStyles = ({ colors, radius, spacing, typography }) =>
+  StyleSheet.create({
+    content: {
+      gap: spacing.lg,
+    },
+    sectionCard: {
+      backgroundColor: colors.surface,
+      borderRadius: radius.xl,
+      padding: spacing.xxl,
+      borderWidth: 1,
+      borderColor: colors.border,
+      gap: spacing.lg,
+    },
+    title: {
+      ...typography.title,
+      color: colors.text,
+    },
+    subtitle: {
+      ...typography.body,
+      color: colors.muted,
+    },
+    userCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.md,
+      backgroundColor: colors.background,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+    },
+    userCopy: {
+      flex: 1,
+      gap: spacing.xs,
+    },
+    userName: {
+      ...typography.bodyStrong,
+      color: colors.text,
+    },
+    userMeta: {
+      ...typography.caption,
+      color: colors.muted,
+    },
+    roleBadge: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.pill,
+    },
+    adminBadge: {
+      backgroundColor: colors.primarySoft,
+    },
+    superAdminBadge: {
+      backgroundColor: colors.warningSoft,
+    },
+    clientBadge: {
+      backgroundColor: colors.neutralSoft,
+    },
+    sellerBadge: {
+      backgroundColor: colors.surfaceAlt,
+    },
+    roleBadgeText: {
+      ...typography.caption,
+      textTransform: 'capitalize',
+    },
+    adminBadgeText: {
+      color: colors.primaryDark,
+    },
+    superAdminBadgeText: {
+      color: colors.warning,
+    },
+    clientBadgeText: {
+      color: colors.success,
+    },
+    sellerBadgeText: {
+      color: colors.secondary,
+    },
+  });

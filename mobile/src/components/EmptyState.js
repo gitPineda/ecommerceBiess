@@ -1,10 +1,19 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, spacing, typography } from '../theme';
+import { useAppTheme, useThemedStyles } from '../theme';
 import PrimaryButton from './PrimaryButton';
 
-export default function EmptyState({ icon = 'cube-outline', title, description, actionLabel, onAction }) {
+export default function EmptyState({
+  icon = 'cube-outline',
+  title,
+  description,
+  actionLabel,
+  onAction,
+}) {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.wrapper}>
       <View style={styles.iconShell}>
@@ -17,32 +26,33 @@ export default function EmptyState({ icon = 'cube-outline', title, description, 
   );
 }
 
-const styles = StyleSheet.create({
-  wrapper: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.xxl,
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  iconShell: {
-    width: 72,
-    height: 72,
-    borderRadius: radius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surfaceAlt,
-  },
-  title: {
-    ...typography.title,
-    color: colors.text,
-    textAlign: 'center',
-  },
-  description: {
-    ...typography.body,
-    color: colors.muted,
-    textAlign: 'center',
-  },
-});
+const createStyles = ({ colors, radius, spacing, typography }) =>
+  StyleSheet.create({
+    wrapper: {
+      backgroundColor: colors.surface,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing.xxl,
+      alignItems: 'center',
+      gap: spacing.md,
+    },
+    iconShell: {
+      width: 72,
+      height: 72,
+      borderRadius: radius.lg,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.surfaceAlt,
+    },
+    title: {
+      ...typography.title,
+      color: colors.text,
+      textAlign: 'center',
+    },
+    description: {
+      ...typography.body,
+      color: colors.muted,
+      textAlign: 'center',
+    },
+  });

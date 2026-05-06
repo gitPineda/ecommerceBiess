@@ -1,12 +1,14 @@
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { colors, radius, spacing, typography } from '../theme';
+import { useThemedStyles } from '../theme';
 
 export default function CategoryFilterBar({
   categories,
   selectedCategoryId,
   onSelectCategory,
 }) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.wrapper}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -35,39 +37,40 @@ export default function CategoryFilterBar({
   );
 }
 
-const styles = StyleSheet.create({
-  wrapper: {
-    marginHorizontal: -spacing.lg,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  chipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  label: {
-    ...typography.bodyStrong,
-    color: colors.text,
-  },
-  labelActive: {
-    color: colors.white,
-  },
-  count: {
-    ...typography.caption,
-    color: colors.muted,
-  },
-});
+const createStyles = ({ colors, radius, spacing, typography }) =>
+  StyleSheet.create({
+    wrapper: {
+      marginHorizontal: -spacing.lg,
+    },
+    row: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      paddingHorizontal: spacing.lg,
+    },
+    chip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      borderRadius: radius.pill,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    chipActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    label: {
+      ...typography.bodyStrong,
+      color: colors.text,
+    },
+    labelActive: {
+      color: colors.white,
+    },
+    count: {
+      ...typography.caption,
+      color: colors.muted,
+    },
+  });

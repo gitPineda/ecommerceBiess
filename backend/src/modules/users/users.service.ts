@@ -4,18 +4,34 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Role, User } from '@prisma/client';
+import { User } from '@prisma/client';
 import { hash } from 'bcryptjs';
+import { AuditService } from '../audit/audit.service';
+import { AuditRequestContext } from '../audit/interfaces/audit-request-context.interface';
+import {
+  isAdminRole,
+  mapAppRoleToPrisma,
+  mapPrismaRole,
+} from '../auth/auth-role.utils';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 
+type UserWithSellerMetrics = User & {
+  sellerRating: number | { toString(): string };
+  sellerStarsTotal: number;
+  sellerRatedProductsCount: number;
+};
+
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditService: AuditService,
+  ) {}
 
   async list(currentUser: AuthenticatedUser) {
-    if (currentUser.role !== 'admin') {
+    if (!isAdminRole(currentUser.role)) {
       throw new ForbiddenException('Solo un administrador puede listar usuarios.');
     }
 
@@ -44,7 +60,7 @@ export class UsersService {
   }
 
   async getById(currentUser: AuthenticatedUser, id: string) {
-    if (currentUser.role !== 'admin' && currentUser.userId !== id) {
+    if (!isAdminRole(currentUser.role) && currentUser.userId !== id) {
       throw new ForbiddenException('No puedes consultar otro usuario.');
     }
 
@@ -59,15 +75,19 @@ export class UsersService {
     return this.mapUser(user);
   }
 
-  async create(currentUser: AuthenticatedUser, payload: CreateUserDto) {
-    if (currentUser.role !== 'admin') {
+  async create(
+    currentUser: AuthenticatedUser,
+    payload: CreateUserDto,
+    auditContext?: AuditRequestContext,
+  ) {
+    if (!isAdminRole(currentUser.role)) {
       throw new ForbiddenException('Solo un administrador puede crear usuarios.');
     }
 
     const email = payload.email.trim().toLowerCase();
     const username = payload.username.trim().toLowerCase();
 
-    const existingUser = await this.prisma.user.findFirst({
+    const existingUsers = await this.prisma.user.findMany({
       where: {
         OR: [
           { email },
@@ -77,15 +97,43 @@ export class UsersService {
       select: {
         email: true,
         username: true,
+        role: true,
       },
     });
 
-    if (existingUser?.email === email) {
-      throw new BadRequestException('El correo ya existe.');
+    const sameRoleUser = existingUsers.find((user) => user.role === payload.role);
+
+    if (sameRoleUser?.email === email) {
+      throw new BadRequestException(
+        'Ya existe un usuario con ese correo y el mismo rol.',
+      );
     }
 
-    if (existingUser?.username === username) {
-      throw new BadRequestException('El nombre de usuario ya existe.');
+    if (sameRoleUser?.username === username) {
+      throw new BadRequestException(
+        'Ya existe un usuario con ese nombre de usuario y el mismo rol.',
+      );
+    }
+
+    if (existingUsers.some((user) => user.email === email)) {
+      throw new BadRequestException(
+        'El correo ya esta registrado en otro rol.',
+      );
+    }
+
+    if (existingUsers.some((user) => user.username === username)) {
+      throw new BadRequestException(
+        'El nombre de usuario ya esta registrado en otro rol.',
+      );
+    }
+
+    const selectedRole = await this.prisma.userRole.findUnique({
+      where: { code: payload.role },
+      select: { code: true, isActive: true },
+    });
+
+    if (!selectedRole || !selectedRole.isActive) {
+      throw new BadRequestException('El rol seleccionado no es valido.');
     }
 
     const user = await this.prisma.user.create({
@@ -94,15 +142,34 @@ export class UsersService {
         lastName: payload.lastName.trim(),
         username,
         email,
+        phoneNumber: payload.phoneNumber?.trim() || null,
         passwordHash: await hash(payload.password, 10),
-        role: payload.role === 'admin' ? Role.ADMIN : Role.CUSTOMER,
+        role: mapAppRoleToPrisma(payload.role),
       },
     });
+
+    await this.auditService.createEntry({
+      userId: currentUser.userId,
+      usuario: currentUser.email,
+      actividad: 'USUARIO_CREADO',
+      context: auditContext,
+      detalle: {
+        origen: 'administracion',
+          usuarioCreado: {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            role: mapPrismaRole(user.role),
+          },
+        },
+      });
 
     return this.mapUser(user);
   }
 
   private mapUser(user: User) {
+    const sellerAwareUser = user as UserWithSellerMetrics;
+
     return {
       id: user.id,
       firstName: user.firstName,
@@ -110,7 +177,11 @@ export class UsersService {
       fullName: `${user.firstName} ${user.lastName}`.trim(),
       username: user.username,
       email: user.email,
-      role: user.role === Role.ADMIN ? 'admin' : 'customer',
+      phoneNumber: user.phoneNumber,
+      role: mapPrismaRole(user.role),
+      sellerRating: Number(sellerAwareUser.sellerRating),
+      sellerStarsTotal: sellerAwareUser.sellerStarsTotal,
+      sellerRatedProductsCount: sellerAwareUser.sellerRatedProductsCount,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };

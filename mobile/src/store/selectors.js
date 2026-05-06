@@ -1,10 +1,32 @@
-export function getCartSummary(cartItems) {
+function getVatPercent(company) {
+  const numericPercent = Number(company?.vatPercent);
+
+  if (Number.isFinite(numericPercent) && numericPercent >= 0) {
+    return numericPercent;
+  }
+
+  return 15;
+}
+
+function getVatRate(company) {
+  const numericRate = Number(company?.vatRate);
+
+  if (Number.isFinite(numericRate) && numericRate >= 0) {
+    return numericRate;
+  }
+
+  return getVatPercent(company) / 100;
+}
+
+export function getCartSummary(cartItems, company) {
   const itemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
   const subtotal = cartItems.reduce(
     (total, item) => total + item.price * item.quantity,
     0,
   );
-  const tax = subtotal * 0.12;
+  const vatRate = getVatRate(company);
+  const vatPercent = getVatPercent(company);
+  const tax = subtotal * vatRate;
   const total = subtotal + tax;
 
   return {
@@ -12,6 +34,8 @@ export function getCartSummary(cartItems) {
     subtotal,
     tax,
     total,
+    vatRate,
+    vatPercent,
   };
 }
 

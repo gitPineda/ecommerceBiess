@@ -1,8 +1,10 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../theme';
+import { useAppTheme } from '../theme';
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
+import AuditScreen from '../screens/admin/AuditScreen';
+import CategoryManagementScreen from '../screens/admin/CategoryManagementScreen';
 import ProductManagementScreen from '../screens/admin/ProductManagementScreen';
 import UserManagementScreen from '../screens/admin/UserManagementScreen';
 import SettingsScreen from '../screens/admin/SettingsScreen';
@@ -11,12 +13,16 @@ const Tab = createBottomTabNavigator();
 
 const ICONS = {
   Resumen: 'grid-outline',
+  Categorias: 'layers-outline',
   Productos: 'cube-outline',
   Usuarios: 'people-outline',
+  Auditoria: 'document-text-outline',
   Ajustes: 'settings-outline',
 };
 
 export default function AdminNavigator() {
+  const { colors } = useAppTheme();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -39,8 +45,10 @@ export default function AdminNavigator() {
       })}
     >
       <Tab.Screen name="Resumen" component={AdminDashboardScreen} />
+      <Tab.Screen name="Categorias" component={CategoryManagementScreen} />
       <Tab.Screen name="Productos" component={ProductManagementScreen} />
       <Tab.Screen name="Usuarios" component={UserManagementScreen} />
+      <Tab.Screen name="Auditoria" component={AuditScreen} />
       <Tab.Screen name="Ajustes" component={SettingsScreen} />
     </Tab.Navigator>
   );

@@ -5,25 +5,28 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  View,
 } from 'react-native';
+import AppSelectInput from '../components/AppSelectInput';
 import AppTextInput from '../components/AppTextInput';
 import ErrorBanner from '../components/ErrorBanner';
 import PrimaryButton from '../components/PrimaryButton';
 import ScreenContainer from '../components/ScreenContainer';
 import brand from '../config/brand.json';
+import { ROLE_OPTIONS } from '../config/roles';
 import { useAppStore } from '../store/AppStore';
-import { colors, radius, spacing, typography } from '../theme';
+import { useThemedStyles } from '../theme';
 
 const INITIAL_FORM = {
   names: '',
   lastNames: '',
   email: '',
   password: '',
+  role: brand.roles.customer,
 };
 
 export default function CreateUserScreen({ navigation }) {
   const { registerUser, clearAppError } = useAppStore();
+  const styles = useThemedStyles(createStyles);
   const [form, setForm] = useState(INITIAL_FORM);
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -80,6 +83,7 @@ export default function CreateUserScreen({ navigation }) {
         lastName: form.lastNames.trim(),
         email: form.email.trim(),
         password: form.password,
+        role: form.role,
       });
 
       navigation.navigate('Login', {
@@ -103,7 +107,7 @@ export default function CreateUserScreen({ navigation }) {
           <View style={styles.headerBlock}>
             <Text style={styles.title}>Crear usuario</Text>
             <Text style={styles.subtitle}>
-              Registra una cuenta cliente para ingresar a la aplicacion.
+              Registra una cuenta y selecciona el rol que tendra dentro de la aplicacion.
             </Text>
           </View>
 
@@ -141,10 +145,12 @@ export default function CreateUserScreen({ navigation }) {
             placeholder="Minimo 6 caracteres"
           />
 
-          <View style={styles.rolePanel}>
-            <Text style={styles.roleLabel}>Rol asignado por defecto</Text>
-            <Text style={styles.roleValue}>{brand.roles.customer}</Text>
-          </View>
+          <AppSelectInput
+            label="Rol"
+            value={form.role}
+            options={ROLE_OPTIONS}
+            onChange={(value) => updateField('role', value)}
+          />
 
           <PrimaryButton
             title="Crear usuario"
@@ -161,53 +167,37 @@ export default function CreateUserScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  content: {
-    justifyContent: 'center',
-  },
-  keyboard: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    padding: spacing.xxl,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: spacing.lg,
-  },
-  headerBlock: {
-    gap: spacing.sm,
-  },
-  title: {
-    ...typography.title,
-    color: colors.text,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.muted,
-  },
-  rolePanel: {
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    gap: spacing.xs,
-  },
-  roleLabel: {
-    ...typography.caption,
-    color: colors.muted,
-  },
-  roleValue: {
-    ...typography.bodyStrong,
-    color: colors.primary,
-    textTransform: 'capitalize',
-  },
-  linkText: {
-    ...typography.bodyStrong,
-    color: colors.primary,
-    textAlign: 'center',
-  },
-});
+const createStyles = ({ colors, radius, spacing, typography }) =>
+  StyleSheet.create({
+    content: {
+      justifyContent: 'center',
+    },
+    keyboard: {
+      flex: 1,
+      justifyContent: 'center',
+    },
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: radius.xl,
+      padding: spacing.xxl,
+      borderWidth: 1,
+      borderColor: colors.border,
+      gap: spacing.lg,
+    },
+    headerBlock: {
+      gap: spacing.sm,
+    },
+    title: {
+      ...typography.title,
+      color: colors.text,
+    },
+    subtitle: {
+      ...typography.body,
+      color: colors.muted,
+    },
+    linkText: {
+      ...typography.bodyStrong,
+      color: colors.primary,
+      textAlign: 'center',
+    },
+  });

@@ -6,15 +6,33 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Role {
-  ADMIN
-  CUSTOMER
-}
-
 enum OrderStatus {
+  PENDING_PAYMENT
+  PAYMENT_APPROVED
+  PAYMENT_CANCELED
+  PAYMENT_FAILED
   CONFIRMED
   PAID
   CANCELLED
+}
+
+enum OrderFlowStatus {
+  PENDIENTE
+  CONFIRMADO
+  EN_PREPARACION
+  EN_CAMINO
+  ENTREGADO
+  PAGADO
+  COMPLETADO
+  CANCELADO
+  RECHAZADO
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELED
 }
 
 model User {
@@ -23,52 +41,186 @@ model User {
   lastName     String
   username     String    @unique
   email        String    @unique
+  phoneNumber  String?   @db.VarChar(32)
   passwordHash String
-  role         Role      @default(CUSTOMER)
+  role         String    @default("customer") @db.VarChar(32)
+  sellerRating Decimal   @default(0) @db.Decimal(4, 2)
+  sellerStarsTotal Int   @default(0)
+  sellerRatedProductsCount Int @default(0)
+  customerRating Decimal @default(0) @db.Decimal(4, 2)
+  customerStarsTotal Int @default(0)
+  customerRatedOrdersCount Int @default(0)
+  roleRelation UserRole  @relation(fields: [role], references: [code], onDelete: Restrict)
   orders       Order[]
+  passwordResetRequests PasswordResetRequest[]
+  products     Product[] @relation("SellerProducts")
+  salesItems   OrderItem[] @relation("SellerOrderItems")
+  assignedOrders Order[] @relation("AssignedSellerOrders")
+  orderStatusHistory OrderStatusHistory[] @relation("OrderStatusHistoryByUser")
+  auditorias   Auditoria[]
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
   @@index([role])
 }
 
+model UserRole {
+  code        String   @id @db.VarChar(32)
+  name        String   @unique @db.VarChar(80)
+  description String?  @db.VarChar(180)
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([sortOrder, name])
+  @@map("roles")
+}
+
+model PasswordResetRequest {
+  id                  String   @id @default(cuid())
+  userId              String   @db.Uuid
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailSnapshot       String   @db.VarChar(160)
+  codeHash            String   @db.VarChar(128)
+  expiresAt           DateTime
+  verifiedAt          DateTime?
+  usedAt              DateTime?
+  attempts            Int      @default(0)
+  maxAttempts         Int      @default(5)
+  requestedFromIp     String?  @db.VarChar(120)
+  requestedFromDevice String?  @db.VarChar(512)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([emailSnapshot, createdAt])
+  @@index([expiresAt])
+  @@index([usedAt])
+}
+
 model Product {
   id                String      @id @default(cuid())
   name              String
   sku               String      @unique
+  sellerId          String      @db.Uuid
+  seller            User        @relation("SellerProducts", fields: [sellerId], references: [id], onDelete: Restrict)
   categoryId        String
+  productCategory   ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   category          String
   price             Decimal     @db.Decimal(10, 2)
   stock             Int
+  isActive          Boolean     @default(true)
+  archivedAt        DateTime?
+  deletedAt         DateTime?
   featured          Boolean     @default(false)
   isPromotion       Boolean     @default(false)
   promotionDiscount Int         @default(0)
   description       String
+  imageProvider     String?     @db.VarChar(40)
+  imagePublicId     String?     @unique @db.VarChar(255)
+  imageAssetId      String?     @unique @db.VarChar(255)
+  imageUrl          String?     @db.VarChar(2048)
+  imageSecureUrl    String?     @db.VarChar(2048)
+  imageThumbUrl     String?     @db.VarChar(2048)
+  imageCardUrl      String?     @db.VarChar(2048)
+  imageDetailUrl    String?     @db.VarChar(2048)
+  imageWidth        Int?
+  imageHeight       Int?
+  imageBytes        Int?
+  imageFormat       String?     @db.VarChar(32)
+  imageResourceType String?     @db.VarChar(32)
+  imageMimeType     String?     @db.VarChar(120)
+  imageFolder       String?     @db.VarChar(255)
+  imageVersion      String?     @db.VarChar(32)
+  imageOriginalName String?     @db.VarChar(255)
+  imageUploadedAt   DateTime?
   orderItems        OrderItem[]
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 
   @@index([categoryId])
+  @@index([isActive])
+  @@index([archivedAt])
+  @@index([deletedAt])
   @@index([featured])
   @@index([isPromotion])
+  @@index([sellerId])
+  @@index([sellerId, createdAt])
+}
+
+model ProductCategory {
+  id          String    @id @db.VarChar(80)
+  name        String    @unique @db.VarChar(120)
+  icon        String    @db.VarChar(80)
+  description String?   @db.VarChar(255)
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+
+  @@index([isActive])
+  @@index([sortOrder, name])
 }
 
 model Order {
-  id              String       @id @default(cuid())
-  userId          String       @db.Uuid
-  user            User         @relation(fields: [userId], references: [id], onDelete: Restrict)
-  status          OrderStatus  @default(CONFIRMED)
-  paymentMethod   String
-  subtotal        Decimal      @db.Decimal(10, 2)
-  tax             Decimal      @db.Decimal(10, 2)
-  total           Decimal      @db.Decimal(10, 2)
-  shippingAddress Json
-  items           OrderItem[]
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  id                        String       @id @default(cuid())
+  userId                    String       @db.Uuid
+  user                      User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  status                    OrderStatus  @default(CONFIRMED)
+  orderStatus               OrderFlowStatus @default(PENDIENTE)
+  paymentStatus             PaymentStatus @default(PENDING)
+  paymentMethod             String
+  paymentProvider           String?      @db.VarChar(32)
+  assignedSellerId          String?      @db.Uuid
+  assignedSeller            User?        @relation("AssignedSellerOrders", fields: [assignedSellerId], references: [id], onDelete: SetNull)
+  customerPhoneNumber       String?      @db.VarChar(32)
+  customerCountryCode       String?      @db.VarChar(8)
+  deliveryOtp               String?      @db.VarChar(12)
+  deliveryOtpGeneratedAt    DateTime?
+  deliveryOtpVerifiedAt     DateTime?
+  subtotal                  Decimal      @db.Decimal(10, 2)
+  tax                       Decimal      @db.Decimal(10, 2)
+  total                     Decimal      @db.Decimal(10, 2)
+  shippingAddress           Json
+  paymentExpiresAt          DateTime?
+  paymentApprovedAt         DateTime?
+  confirmedAt               DateTime?
+  preparingAt               DateTime?
+  inTransitAt               DateTime?
+  deliveredAt               DateTime?
+  paidAt                    DateTime?
+  completedAt               DateTime?
+  cancelledAt               DateTime?
+  rejectedAt                DateTime?
+  customerRatedAt           DateTime?
+  sellerCustomerRating      Int?
+  sellerCustomerRatedAt     DateTime?
+  payphoneClientTransactionId String?    @unique @db.VarChar(80)
+  payphoneTransactionId     String?      @db.VarChar(80)
+  payphoneTransactionStatus String?      @db.VarChar(80)
+  payphoneStatusCode        Int?
+  payphoneAuthorizationCode String?      @db.VarChar(80)
+  payphoneMessage           String?      @db.VarChar(255)
+  payphoneMessageCode       Int?
+  payphoneResponse          Json?
+  statusHistory             OrderStatusHistory[]
+  items                     OrderItem[]
+  createdAt                 DateTime     @default(now())
+  updatedAt                 DateTime     @updatedAt
 
   @@index([userId])
   @@index([status])
+  @@index([orderStatus])
+  @@index([paymentStatus])
+  @@index([assignedSellerId])
+  @@index([paymentProvider])
+  @@index([completedAt])
+  @@index([deliveredAt])
+  @@index([paidAt])
 }
 
 model OrderItem {
@@ -77,12 +229,79 @@ model OrderItem {
   order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId       String
   product         Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  sellerId        String   @db.Uuid
+  seller          User     @relation("SellerOrderItems", fields: [sellerId], references: [id], onDelete: Restrict)
+  sellerName      String
   productName     String
   productCategory String
+  productImageUrl String?  @db.VarChar(2048)
+  productThumbUrl String?  @db.VarChar(2048)
   unitPrice       Decimal  @db.Decimal(10, 2)
   quantity        Int
+  customerRating  Int?
+  ratedAt         DateTime?
   createdAt       DateTime @default(now())
 
   @@index([orderId])
   @@index([productId])
+  @@index([sellerId])
+}
+
+model OrderStatusHistory {
+  id              Int             @id @default(autoincrement())
+  orderId         String
+  order           Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  fromStatus      OrderFlowStatus?
+  toStatus        OrderFlowStatus
+  changedByUserId String          @db.Uuid
+  changedByUser   User            @relation("OrderStatusHistoryByUser", fields: [changedByUserId], references: [id], onDelete: Restrict)
+  changedByRole   String          @db.VarChar(32)
+  note            String?         @db.VarChar(255)
+  metadata        Json?
+  createdAt       DateTime        @default(now())
+
+  @@index([orderId, createdAt])
+  @@index([changedByUserId])
+}
+
+model Empresa {
+  id             Int      @id @default(autoincrement())
+  singletonKey   String   @unique @default("default") @db.VarChar(32)
+  appName        String   @db.VarChar(160)
+  shortName      String   @db.VarChar(80)
+  slug           String   @unique @db.VarChar(160)
+  tagline        String   @db.VarChar(200)
+  welcomeTitle   String   @db.VarChar(160)
+  welcomeMessage String   @db.VarChar(300)
+  supportEmail   String   @db.VarChar(160)
+  currency       String   @db.VarChar(10)
+  currencySymbol String   @db.VarChar(8)
+  defaultLocale  String   @db.VarChar(20)
+  vatRate        Decimal  @default(0.15) @db.Decimal(5, 4)
+  vatPercent     Int      @default(15)
+  logoText       String   @db.VarChar(40)
+  logoMimeType   String?  @db.VarChar(120)
+  logoFileName   String?  @db.VarChar(255)
+  logoData       Bytes?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("empresa")
+}
+
+model Auditoria {
+  id             Int      @id @default(autoincrement())
+  userId         String   @db.Uuid
+  user           User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  usuario        String   @db.VarChar(160)
+  fechaHora      DateTime @default(now())
+  actividad      String   @db.VarChar(120)
+  direccionIp    String?  @db.VarChar(120)
+  origenConexion String?  @db.VarChar(512)
+  detalle        Json?
+
+  @@map("auditoria")
+  @@index([userId, fechaHora])
+  @@index([actividad])
+  @@index([fechaHora])
 }

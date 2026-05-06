@@ -15,13 +15,23 @@
     "android": "com.biess.commerce"
   },
   "roles": {
+    "superadmin": "superadmin",
     "admin": "admin",
+    "seller": "seller",
     "customer": "customer"
   },
   "demoCredentials": {
+    "superadmin": {
+      "username": "superadmin",
+      "password": "SuperAdmin123*"
+    },
     "admin": {
       "username": "admin",
       "password": "Admin123*"
+    },
+    "seller": {
+      "username": "maria.vendedora",
+      "password": "Maria123*"
     },
     "customer": {
       "username": "cliente",
@@ -29,19 +39,19 @@
     }
   },
   "palette": {
-    "primary": "#0F766E",
-    "primaryDark": "#134E4A",
-    "secondary": "#F97316",
-    "accent": "#0EA5E9",
-    "background": "#F3F7F6",
+    "primary": "#6F9DD1",
+    "primaryDark": "#315B8C",
+    "secondary": "#111827",
+    "accent": "#DCEAFE",
+    "background": "#F7FAFC",
     "surface": "#FFFFFF",
-    "surfaceAlt": "#E6F4F1",
-    "text": "#102A43",
-    "muted": "#64748B",
-    "border": "#D9E2EC",
-    "danger": "#DC2626",
-    "success": "#15803D",
-    "warning": "#B45309"
+    "surfaceAlt": "#EEF4FF",
+    "text": "#0F172A",
+    "muted": "#667085",
+    "border": "#D8E2EF",
+    "danger": "#CC6F6F",
+    "success": "#5F927A",
+    "warning": "#A18462"
   },
   "assets": {
     "icon": "./assets/images/icon.png",

@@ -23,6 +23,7 @@ module.exports = {
     },
     android: {
       package: brand.bundleIdentifiers.android,
+      usesCleartextTraffic: true,
       adaptiveIcon: {
         foregroundImage: brand.assets.adaptiveIcon,
         backgroundColor: brand.palette.surface,

@@ -9,6 +9,33 @@ function sanitizeUser(user) {
   return safeUser;
 }
 
+function assertRoleScopedUserAvailability(payload, users = []) {
+  const normalizedEmail = payload.email.trim().toLowerCase();
+  const normalizedUsername = payload.username.trim().toLowerCase();
+  const sameRoleUser = users.find(
+    (user) =>
+      user.role === payload.role &&
+      (user.email.toLowerCase() === normalizedEmail ||
+        user.username.toLowerCase() === normalizedUsername),
+  );
+
+  if (sameRoleUser?.email.toLowerCase() === normalizedEmail) {
+    throw new Error('Ya existe un usuario con ese correo y el mismo rol.');
+  }
+
+  if (sameRoleUser?.username.toLowerCase() === normalizedUsername) {
+    throw new Error('Ya existe un usuario con ese nombre de usuario y el mismo rol.');
+  }
+
+  if (users.some((user) => user.email.toLowerCase() === normalizedEmail)) {
+    throw new Error('El correo ya esta registrado en otro rol.');
+  }
+
+  if (users.some((user) => user.username.toLowerCase() === normalizedUsername)) {
+    throw new Error('El nombre de usuario ya esta registrado en otro rol.');
+  }
+}
+
 async function authenticateUserWithApi(credentials) {
   const response = await apiRequest('/auth/login', {
     method: 'POST',
@@ -101,7 +128,9 @@ export async function registerPublicUser(payload, users = []) {
         lastName: payload.lastName.trim(),
         username: payload.username.trim().toLowerCase(),
         email: payload.email.trim().toLowerCase(),
+        phoneNumber: payload.phoneNumber?.trim() || undefined,
         password: payload.password,
+        role: payload.role,
       },
     });
 
@@ -110,14 +139,15 @@ export async function registerPublicUser(payload, users = []) {
 
   const normalizedEmail = payload.email.trim().toLowerCase();
   const normalizedUsername = payload.username.trim().toLowerCase();
-
-  if (users.some((user) => user.email.toLowerCase() === normalizedEmail)) {
-    throw new Error('El correo ya existe.');
-  }
-
-  if (users.some((user) => user.username.toLowerCase() === normalizedUsername)) {
-    throw new Error('El nombre de usuario ya existe.');
-  }
+  assertRoleScopedUserAvailability(
+    {
+      ...payload,
+      email: normalizedEmail,
+      username: normalizedUsername,
+      role: payload.role || 'customer',
+    },
+    users,
+  );
 
   return {
     id: `usr-${Date.now()}`,
@@ -139,6 +169,7 @@ export async function createManagedUser(payload, session, users = []) {
         lastName: payload.lastName.trim(),
         username: payload.username.trim().toLowerCase(),
         email: payload.email.trim().toLowerCase(),
+        phoneNumber: payload.phoneNumber?.trim() || undefined,
         password: payload.password,
         role: payload.role,
       },
@@ -149,14 +180,14 @@ export async function createManagedUser(payload, session, users = []) {
 
   const normalizedEmail = payload.email.trim().toLowerCase();
   const normalizedUsername = payload.username.trim().toLowerCase();
-
-  if (users.some((user) => user.email.toLowerCase() === normalizedEmail)) {
-    throw new Error('El correo ya existe.');
-  }
-
-  if (users.some((user) => user.username.toLowerCase() === normalizedUsername)) {
-    throw new Error('El nombre de usuario ya existe.');
-  }
+  assertRoleScopedUserAvailability(
+    {
+      ...payload,
+      email: normalizedEmail,
+      username: normalizedUsername,
+    },
+    users,
+  );
 
   return {
     id: `usr-${Date.now()}`,
@@ -177,10 +208,47 @@ export async function requestPasswordReset(email) {
       },
     });
 
-    return response.message;
+    return response;
   }
 
-  return 'Su peticion ha sido enviada a su correo.';
+  return {
+    message: 'Su peticion ha sido enviada a su correo.',
+    email: email.trim().toLowerCase(),
+  };
+}
+
+export async function verifyPasswordResetCode(email, code) {
+  if (isApiMode()) {
+    return apiRequest('/auth/forgot-password/verify', {
+      method: 'POST',
+      body: {
+        email: email.trim().toLowerCase(),
+        code: String(code || '').trim(),
+      },
+    });
+  }
+
+  return {
+    message: 'Codigo validado correctamente.',
+    resetToken: 'mock-reset-token',
+    email: email.trim().toLowerCase(),
+  };
+}
+
+export async function resetPasswordWithToken(resetToken, newPassword) {
+  if (isApiMode()) {
+    return apiRequest('/auth/forgot-password/reset', {
+      method: 'POST',
+      body: {
+        resetToken,
+        newPassword,
+      },
+    });
+  }
+
+  return {
+    message: 'Tu clave fue restablecida correctamente.',
+  };
 }
 
 export function clearAuthSession() {

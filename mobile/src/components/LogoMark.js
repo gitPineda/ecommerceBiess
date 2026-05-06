@@ -1,8 +1,8 @@
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
-import brand from '../config/brand.json';
 import { brandAssets } from '../config/brandAssets';
-import { colors, radius, spacing, typography } from '../theme';
+import { useAppStore } from '../store/AppStore';
+import { useThemedStyles } from '../theme';
 
 const SIZE_MAP = {
   sm: 56,
@@ -11,7 +11,12 @@ const SIZE_MAP = {
 };
 
 export default function LogoMark({ size = 'md', stacked = false, subtitle }) {
+  const { company } = useAppStore();
+  const styles = useThemedStyles(createStyles);
   const dimension = SIZE_MAP[size] || SIZE_MAP.md;
+  const logoSource = company?.logoDataUri
+    ? { uri: company.logoDataUri }
+    : brandAssets.logo;
 
   return (
     <View style={[styles.wrapper, stacked && styles.wrapperStacked]}>
@@ -21,12 +26,12 @@ export default function LogoMark({ size = 'md', stacked = false, subtitle }) {
           {
             width: dimension,
             height: dimension,
-            borderRadius: radius.lg,
+            borderRadius: styles.logoShell.borderRadius,
           },
         ]}
       >
         <Image
-          source={brandAssets.logo}
+          source={logoSource}
           style={{
             width: dimension * 0.6,
             height: dimension * 0.6,
@@ -35,46 +40,48 @@ export default function LogoMark({ size = 'md', stacked = false, subtitle }) {
         />
       </View>
       <View style={stacked ? styles.textBlockCentered : styles.textBlock}>
-        <Text style={styles.title}>{brand.appName}</Text>
-        <Text style={styles.subtitle}>{subtitle || brand.tagline}</Text>
+        <Text style={styles.title}>{company?.appName}</Text>
+        <Text style={styles.subtitle}>{subtitle || company?.tagline}</Text>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  wrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  wrapperStacked: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoShell: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  textBlock: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  textBlockCentered: {
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  title: {
-    ...typography.title,
-    color: colors.text,
-  },
-  subtitle: {
-    ...typography.caption,
-    color: colors.muted,
-    textAlign: 'center',
-  },
-});
+const createStyles = ({ colors, radius, spacing, typography }) =>
+  StyleSheet.create({
+    wrapper: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+    },
+    wrapperStacked: {
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    logoShell: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.lg,
+    },
+    textBlock: {
+      flex: 1,
+      gap: spacing.xs,
+    },
+    textBlockCentered: {
+      alignItems: 'center',
+      gap: spacing.xs,
+    },
+    title: {
+      ...typography.title,
+      color: colors.text,
+    },
+    subtitle: {
+      ...typography.caption,
+      color: colors.muted,
+      textAlign: 'center',
+    },
+  });

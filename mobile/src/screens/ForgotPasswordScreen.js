@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -12,14 +12,21 @@ import ErrorBanner from '../components/ErrorBanner';
 import PrimaryButton from '../components/PrimaryButton';
 import ScreenContainer from '../components/ScreenContainer';
 import { useAppStore } from '../store/AppStore';
-import { colors, radius, spacing, typography } from '../theme';
+import { useThemedStyles } from '../theme';
 
-export default function ForgotPasswordScreen({ navigation }) {
+export default function ForgotPasswordScreen({ navigation, route }) {
   const { sendPasswordReset, clearAppError } = useAppStore();
+  const styles = useThemedStyles(createStyles);
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [feedback, setFeedback] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (route?.params?.email) {
+      setEmail(route.params.email);
+    }
+  }, [route?.params?.email]);
 
   async function handleSend() {
     clearAppError();
@@ -39,8 +46,13 @@ export default function ForgotPasswordScreen({ navigation }) {
     setIsSubmitting(true);
 
     try {
-      await sendPasswordReset(email);
-      setFeedback('Su peticion ha sido enviada a su correo.');
+      const response = await sendPasswordReset(email);
+      setFeedback(
+        response.message || 'Su peticion ha sido enviada a su correo.',
+      );
+      navigation.navigate('VerifyResetCode', {
+        email: email.trim().toLowerCase(),
+      });
     } catch (requestError) {
       setError(requestError.message || 'No fue posible enviar la solicitud.');
     } finally {
@@ -89,36 +101,37 @@ export default function ForgotPasswordScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  content: {
-    justifyContent: 'center',
-  },
-  keyboard: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    padding: spacing.xxl,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: spacing.lg,
-  },
-  headerBlock: {
-    gap: spacing.sm,
-  },
-  title: {
-    ...typography.title,
-    color: colors.text,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.muted,
-  },
-  linkText: {
-    ...typography.bodyStrong,
-    color: colors.primary,
-    textAlign: 'center',
-  },
-});
+const createStyles = ({ colors, radius, spacing, typography }) =>
+  StyleSheet.create({
+    content: {
+      justifyContent: 'center',
+    },
+    keyboard: {
+      flex: 1,
+      justifyContent: 'center',
+    },
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: radius.xl,
+      padding: spacing.xxl,
+      borderWidth: 1,
+      borderColor: colors.border,
+      gap: spacing.lg,
+    },
+    headerBlock: {
+      gap: spacing.sm,
+    },
+    title: {
+      ...typography.title,
+      color: colors.text,
+    },
+    subtitle: {
+      ...typography.body,
+      color: colors.muted,
+    },
+    linkText: {
+      ...typography.bodyStrong,
+      color: colors.primary,
+      textAlign: 'center',
+    },
+  });

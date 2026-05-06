@@ -20,3 +20,6 @@ mobile/android/app/build
 
 backend/dist
 backend/.env
+backups
+tmp
+mobile/android/gradle-user-home

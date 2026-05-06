@@ -2,6 +2,7 @@
   "name": "ecommerce-biess-monorepo",
   "version": "1.0.0",
   "private": true,
+  "main": "mobile/index.js",
   "workspaces": [
     "mobile",
     "backend"
@@ -11,13 +12,17 @@
     "mobile:android": "npm run android --workspace mobile",
     "mobile:ios": "npm run ios --workspace mobile",
     "mobile:web": "npm run web --workspace mobile",
+    "mobile:apk:release": "node scripts/build-release-apk.js",
     "mobile:export:android": "npm exec --workspace mobile -- expo export --platform android --output-dir .expo-export-check",
     "backend:dev": "npm run start:dev --workspace backend",
     "backend:build": "npm run build --workspace backend",
     "backend:start": "npm run start --workspace backend",
+    "backend:db:cleanup": "npm run db:cleanup --workspace backend",
     "backend:prisma:generate": "npm run prisma:generate --workspace backend",
     "backend:prisma:migrate": "npm run prisma:migrate --workspace backend",
     "backend:seed": "npm run prisma:seed --workspace backend",
+    "backend:seed:demo-products": "npm run prisma:seed:demo-products --workspace backend",
+    "backend:reconcile:payphone": "npm run prisma:reconcile:payphone --workspace backend",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down"
   },

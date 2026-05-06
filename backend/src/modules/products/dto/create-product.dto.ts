@@ -5,7 +5,9 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
   Max,
+  MaxLength,
   Min,
   MinLength,
 } from 'class-validator';
@@ -20,11 +22,12 @@ export class CreateProductDto {
   @Transform(({ value }) => String(value).trim().toUpperCase())
   sku!: string;
 
-  @IsString()
-  categoryId!: string;
+  @IsOptional()
+  @IsUUID()
+  sellerId?: string;
 
   @IsString()
-  category!: string;
+  categoryId!: string;
 
   @Transform(({ value }) => Number(value))
   @IsNumber({ maxDecimalPlaces: 2 })
@@ -56,4 +59,19 @@ export class CreateProductDto {
   @IsString()
   @MinLength(5)
   description!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(8_500_000)
+  imageBase64?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  imageMimeType?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  imageFileName?: string;
 }

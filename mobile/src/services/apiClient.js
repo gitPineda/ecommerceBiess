@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { envConfig, isApiMode } from '../config/env';
 
 let currentAccessToken = '';
@@ -9,6 +10,7 @@ export function setApiAccessToken(token) {
 function buildHeaders(options = {}) {
   const headers = {
     ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+    'X-Client-Device': `${envConfig.appName} | ${Platform.OS} ${Platform.Version}`,
     ...(options.headers || {}),
   };
 
@@ -33,16 +35,31 @@ export async function apiRequest(endpoint, options = {}) {
   });
 
   const responseText = await response.text();
-  const payload = responseText ? JSON.parse(responseText) : null;
+  const payload = responseText ? parseApiResponse(responseText) : null;
 
   if (!response.ok) {
     const message =
       payload?.message ||
       payload?.error ||
+      (typeof payload === 'string' ? payload : '') ||
       'No se pudo completar la solicitud remota.';
 
     throw new Error(Array.isArray(message) ? message.join(', ') : message);
   }
 
   return payload;
+}
+
+function parseApiResponse(rawResponse) {
+  const normalizedResponse = rawResponse.replace(/^\uFEFF/, '').trim();
+
+  if (!normalizedResponse) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(normalizedResponse);
+  } catch {
+    return normalizedResponse;
+  }
 }

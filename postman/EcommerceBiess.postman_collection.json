@@ -1,0 +1,433 @@
+{
+  "info": {
+    "_postman_id": "d5dbd694-0a63-44a1-8a73-4f8134ea13e7",
+    "name": "EcommerceBiess",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Coleccion para probar el backend local y la integracion directa con PayPhone."
+  },
+  "variable": [
+    {
+      "key": "backend_base_url",
+      "value": "{{backend_base_url}}"
+    },
+    {
+      "key": "payphone_base_url",
+      "value": "{{payphone_base_url}}"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Backend",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{backend_base_url}}/health",
+              "host": [
+                "{{backend_base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Login admin responde 200', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const data = pm.response.json();",
+                  "pm.environment.set('admin_access_token', data.accessToken || '');",
+                  "pm.environment.set('admin_user_id', data.user?.id || '');",
+                  "pm.environment.set('admin_email', data.user?.email || '');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"{{admin_identifier}}\",\n  \"password\": \"{{admin_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{backend_base_url}}/auth/login",
+              "host": [
+                "{{backend_base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login Cliente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Login cliente responde 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const data = pm.response.json();",
+                  "pm.environment.set('customer_access_token', data.accessToken || '');",
+                  "pm.environment.set('customer_user_id', data.user?.id || '');",
+                  "pm.environment.set('customer_email', data.user?.email || '');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"{{customer_identifier}}\",\n  \"password\": \"{{customer_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{backend_base_url}}/auth/login",
+              "host": [
+                "{{backend_base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{customer_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{backend_base_url}}/users/me",
+              "host": [
+                "{{backend_base_url}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Products",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Lista de productos responde 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const data = pm.response.json();",
+                  "const items = data.items || [];",
+                  "if (items[0]?.id) {",
+                  "  pm.environment.set('product_id_1', items[0].id);",
+                  "  pm.environment.set('product_name_1', items[0].name || '');",
+                  "}",
+                  "if (items[1]?.id) {",
+                  "  pm.environment.set('product_id_2', items[1].id);",
+                  "  pm.environment.set('product_name_2', items[1].name || '');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{backend_base_url}}/products",
+              "host": [
+                "{{backend_base_url}}"
+              ],
+              "path": [
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create PayPhone Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Crear pedido devuelve 201 o error controlado', function () {",
+                  "  pm.expect([201, 400, 502]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "let data = {};",
+                  "try {",
+                  "  data = pm.response.json();",
+                  "} catch (error) {",
+                  "  data = {};",
+                  "}",
+                  "",
+                  "if (data.id) {",
+                  "  pm.environment.set('order_id', data.id);",
+                  "}",
+                  "if (data.payphoneClientTransactionId) {",
+                  "  pm.environment.set('payphone_client_transaction_id', data.payphoneClientTransactionId);",
+                  "}",
+                  "if (data.payphoneTransactionId) {",
+                  "  pm.environment.set('payphone_transaction_id', data.payphoneTransactionId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{customer_access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentMethod\": \"payphone\",\n  \"phoneNumber\": \"{{customer_phone}}\",\n  \"countryCode\": \"{{country_code}}\",\n  \"shippingAddress\": {\n    \"address\": \"Av. Principal 123\",\n    \"city\": \"Quito\",\n    \"note\": \"Prueba desde Postman\"\n  },\n  \"items\": [\n    {\n      \"productId\": \"{{product_id_1}}\",\n      \"quantity\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{backend_base_url}}/orders",
+              "host": [
+                "{{backend_base_url}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh PayPhone Order Status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{customer_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{backend_base_url}}/orders/{{order_id}}/payphone/refresh",
+              "host": [
+                "{{backend_base_url}}"
+              ],
+              "path": [
+                "orders",
+                "{{order_id}}",
+                "payphone",
+                "refresh"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order By Id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{customer_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{backend_base_url}}/orders/{{order_id}}",
+              "host": [
+                "{{backend_base_url}}"
+              ],
+              "path": [
+                "orders",
+                "{{order_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. PayPhone Directo",
+      "item": [
+        {
+          "name": "Users Check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{payphone_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{payphone_base_url}}/Users/check/{{customer_phone}}/region/{{country_code}}",
+              "host": [
+                "{{payphone_base_url}}"
+              ],
+              "path": [
+                "Users",
+                "check",
+                "{{customer_phone}}",
+                "region",
+                "{{country_code}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Sale Direct",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const now = new Date();",
+                  "const pad = (value) => String(value).padStart(2, '0');",
+                  "const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;",
+                  "const suffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');",
+                  "pm.environment.set('postman_client_transaction_id', `pm-${timestamp}-${suffix}`);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "let data = {};",
+                  "try {",
+                  "  data = pm.response.json();",
+                  "} catch (error) {",
+                  "  data = {};",
+                  "}",
+                  "",
+                  "if (data.clientTransactionId) {",
+                  "  pm.environment.set('payphone_client_transaction_id', data.clientTransactionId);",
+                  "}",
+                  "if (data.transactionId) {",
+                  "  pm.environment.set('payphone_transaction_id', data.transactionId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{payphone_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"{{customer_phone}}\",\n  \"countryCode\": \"{{country_code}}\",\n  \"amount\": {{sale_amount}},\n  \"amountWithoutTax\": {{sale_amount_without_tax}},\n  \"amountWithTax\": {{sale_amount_with_tax}},\n  \"tax\": {{sale_tax}},\n  \"service\": 0,\n  \"tip\": 0,\n  \"storeId\": \"{{payphone_store_id}}\",\n  \"clientTransactionId\": \"{{postman_client_transaction_id}}\",\n  \"currency\": \"USD\",\n  \"reference\": \"Prueba Postman EcommerceBiess\"\n}"
+            },
+            "url": {
+              "raw": "{{payphone_base_url}}/Sale",
+              "host": [
+                "{{payphone_base_url}}"
+              ],
+              "path": [
+                "Sale"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Sale By Client Transaction Id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{payphone_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{payphone_base_url}}/Sale/client/{{payphone_client_transaction_id}}",
+              "host": [
+                "{{payphone_base_url}}"
+              ],
+              "path": [
+                "Sale",
+                "client",
+                "{{payphone_client_transaction_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

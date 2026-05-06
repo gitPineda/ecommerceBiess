@@ -2,18 +2,25 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../theme';
+import { useAppTheme } from '../theme';
 import { useAppStore } from '../store/AppStore';
 import CartScreen from '../screens/client/CartScreen';
 import CheckoutScreen from '../screens/client/CheckoutScreen';
 import HomeScreen from '../screens/client/HomeScreen';
+import OrderRatingScreen from '../screens/client/OrderRatingScreen';
 import ProductDetailScreen from '../screens/client/ProductDetailScreen';
 import ProfileScreen from '../screens/client/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-function stackOptions(title) {
+const TAB_ICONS = {
+  Inicio: 'storefront-outline',
+  Carrito: 'cart-outline',
+  Perfil: 'person-circle-outline',
+};
+
+function buildStackOptions(colors, title) {
   return {
     title,
     headerStyle: {
@@ -27,47 +34,51 @@ function stackOptions(title) {
 }
 
 function HomeStackNavigator() {
+  const { colors } = useAppTheme();
+
   return (
     <Stack.Navigator>
       <Stack.Screen
         name="CatalogoLista"
         component={HomeScreen}
-        options={stackOptions('Productos')}
+        options={buildStackOptions(colors, 'Productos')}
       />
       <Stack.Screen
         name="DetalleProducto"
         component={ProductDetailScreen}
-        options={stackOptions('Detalle')}
+        options={buildStackOptions(colors, 'Detalle')}
       />
     </Stack.Navigator>
   );
 }
 
 function CartStackNavigator() {
+  const { colors } = useAppTheme();
+
   return (
     <Stack.Navigator>
       <Stack.Screen
         name="CarritoLista"
         component={CartScreen}
-        options={stackOptions('Carrito')}
+        options={buildStackOptions(colors, 'Carrito')}
       />
       <Stack.Screen
         name="Checkout"
         component={CheckoutScreen}
-        options={stackOptions('Pago basico')}
+        options={buildStackOptions(colors, 'Pago')}
+      />
+      <Stack.Screen
+        name="OrderRating"
+        component={OrderRatingScreen}
+        options={buildStackOptions(colors, 'Calificar')}
       />
     </Stack.Navigator>
   );
 }
 
-const TAB_ICONS = {
-  Inicio: 'storefront-outline',
-  Carrito: 'cart-outline',
-  Perfil: 'person-circle-outline',
-};
-
 export default function ClientNavigator() {
   const { cartSummary } = useAppStore();
+  const { colors } = useAppTheme();
 
   return (
     <Tab.Navigator

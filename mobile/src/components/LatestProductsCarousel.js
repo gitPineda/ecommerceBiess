@@ -1,19 +1,25 @@
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { formatCurrency, formatPercentage } from '../config/formatters';
 import { getCategoryMeta } from '../config/productCategories';
 import { getProductPricing } from '../store/selectors';
-import { colors, radius, spacing, typography } from '../theme';
+import { useThemedStyles } from '../theme';
 import PrimaryButton from './PrimaryButton';
+import ProductMedia from './ProductMedia';
 
 export default function LatestProductsCarousel({ products, onSelectProduct, onAddToCart }) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.wrapper}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={styles.row}>
           {products.map((product) => {
-            const categoryMeta = getCategoryMeta(product.categoryId, product.category);
+            const categoryMeta = getCategoryMeta(
+              product.categoryId,
+              product.category,
+              product.categoryIcon,
+            );
             const pricing = getProductPricing(product);
 
             return (
@@ -33,9 +39,7 @@ export default function LatestProductsCarousel({ products, onSelectProduct, onAd
                       ) : null}
                     </View>
 
-                    <View style={styles.iconShell}>
-                      <Ionicons name={categoryMeta.icon} size={22} color={colors.primary} />
-                    </View>
+                    <ProductMedia product={product} variant="card" width={48} height={48} />
                   </View>
 
                   <View style={styles.copyBlock}>
@@ -73,101 +77,96 @@ export default function LatestProductsCarousel({ products, onSelectProduct, onAd
   );
 }
 
-const styles = StyleSheet.create({
-  wrapper: {
-    marginHorizontal: -spacing.lg,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    paddingHorizontal: spacing.lg,
-  },
-  card: {
-    width: 252,
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  mediaShell: {
-    width: 72,
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  badgeRow: {
-    width: '100%',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  newBadge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surfaceAlt,
-  },
-  newBadgeText: {
-    ...typography.caption,
-    color: colors.primary,
-  },
-  promoBadge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.pill,
-    backgroundColor: '#FDE5D3',
-  },
-  promoBadgeText: {
-    ...typography.caption,
-    color: colors.secondary,
-  },
-  iconShell: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surfaceAlt,
-  },
-  copyBlock: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  category: {
-    ...typography.caption,
-    color: colors.primary,
-  },
-  title: {
-    ...typography.bodyStrong,
-    color: colors.text,
-  },
-  description: {
-    ...typography.caption,
-    color: colors.muted,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  priceBlock: {
-    flex: 1,
-    gap: 2,
-  },
-  originalPrice: {
-    ...typography.caption,
-    color: colors.muted,
-    textDecorationLine: 'line-through',
-  },
-  finalPrice: {
-    ...typography.subtitle,
-    color: colors.text,
-  },
-});
+const createStyles = ({ colors, radius, spacing, typography }) =>
+  StyleSheet.create({
+    wrapper: {
+      marginHorizontal: -spacing.lg,
+    },
+    row: {
+      flexDirection: 'row',
+      gap: spacing.md,
+      paddingHorizontal: spacing.lg,
+    },
+    card: {
+      width: 252,
+      backgroundColor: colors.surface,
+      borderRadius: radius.xl,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing.md,
+      gap: spacing.sm,
+    },
+    content: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+    },
+    mediaShell: {
+      width: 72,
+      alignItems: 'center',
+      gap: spacing.xs,
+    },
+    badgeRow: {
+      width: '100%',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: spacing.xs,
+    },
+    newBadge: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: radius.pill,
+      backgroundColor: colors.surfaceAlt,
+    },
+    newBadgeText: {
+      ...typography.caption,
+      color: colors.primary,
+    },
+    promoBadge: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: radius.pill,
+      backgroundColor: colors.promoSurface,
+      borderWidth: 1,
+      borderColor: colors.promoBorder,
+    },
+    promoBadgeText: {
+      ...typography.caption,
+      color: colors.promoText,
+    },
+    copyBlock: {
+      flex: 1,
+      gap: spacing.xs,
+    },
+    category: {
+      ...typography.caption,
+      color: colors.primary,
+    },
+    title: {
+      ...typography.bodyStrong,
+      color: colors.text,
+    },
+    description: {
+      ...typography.caption,
+      color: colors.muted,
+    },
+    footer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+    },
+    priceBlock: {
+      flex: 1,
+      gap: 2,
+    },
+    originalPrice: {
+      ...typography.caption,
+      color: colors.muted,
+      textDecorationLine: 'line-through',
+    },
+    finalPrice: {
+      ...typography.subtitle,
+      color: colors.text,
+    },
+  });

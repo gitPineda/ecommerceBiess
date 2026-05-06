@@ -1,21 +1,24 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import CategoryFilterBar from '../../components/CategoryFilterBar';
+import CompactCustomerHeader from '../../components/CompactCustomerHeader';
 import EmptyState from '../../components/EmptyState';
 import ErrorBanner from '../../components/ErrorBanner';
 import LatestProductsCarousel from '../../components/LatestProductsCarousel';
 import ProductCard from '../../components/ProductCard';
 import SearchBar from '../../components/SearchBar';
 import ScreenContainer from '../../components/ScreenContainer';
-import brand from '../../config/brand.json';
 import { confirmAddProductToCart } from '../../services/cartAlerts';
 import { useAppStore } from '../../store/AppStore';
 import { filterProducts } from '../../store/selectors';
-import { colors, radius, spacing, typography } from '../../theme';
+import { useThemedStyles } from '../../theme';
+
+const PRODUCTS_PER_PAGE = 10;
 
 export default function HomeScreen({ navigation }) {
   const {
     user,
+    company,
     products,
     cartItems,
     addToCart,
@@ -24,8 +27,10 @@ export default function HomeScreen({ navigation }) {
     latestProducts,
     productCategories,
   } = useAppStore();
+  const styles = useThemedStyles(createStyles);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const categories = [
     {
@@ -36,11 +41,37 @@ export default function HomeScreen({ navigation }) {
     ...productCategories,
   ];
 
-  const filteredProducts = filterProducts(products, {
-    query: searchQuery,
-    categoryId: selectedCategory,
-  });
+  const filteredProducts = useMemo(
+    () =>
+      filterProducts(products, {
+        query: searchQuery,
+        categoryId: selectedCategory,
+      }),
+    [products, searchQuery, selectedCategory],
+  );
   const promotionalCount = products.filter((product) => product.isPromotion).length;
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE));
+  const currentPageSafe = Math.min(currentPage, totalPages);
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPageSafe - 1) * PRODUCTS_PER_PAGE;
+    return filteredProducts.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
+  }, [currentPageSafe, filteredProducts]);
+  const visibleRangeStart = filteredProducts.length
+    ? (currentPageSafe - 1) * PRODUCTS_PER_PAGE + 1
+    : 0;
+  const visibleRangeEnd = filteredProducts.length
+    ? Math.min(currentPageSafe * PRODUCTS_PER_PAGE, filteredProducts.length)
+    : 0;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   function handleAddToCart(product) {
     confirmAddProductToCart({
@@ -52,9 +83,10 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <ScreenContainer scroll contentContainerStyle={styles.content}>
-      <View style={styles.hero}>
-        <Text style={styles.greeting}>Hola, {user?.name}</Text>
-        <Text style={styles.heroTitle}>{brand.appName}</Text>
+      <CompactCustomerHeader user={user} onNotificationsPress={() => undefined} />
+
+      {/* <View style={styles.hero}>
+        <Text style={styles.heroTitle}>{company?.appName}</Text>
         <Text style={styles.heroSubtitle}>
           Descubre ultimos ingresos, filtra por categoria y encuentra productos por nombre.
         </Text>
@@ -66,7 +98,7 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.heroBadgeText}>{promotionalCount} promociones activas</Text>
           </View>
         </View>
-      </View>
+      </View> */}
 
       <ErrorBanner message={state.appError} />
 
@@ -100,11 +132,21 @@ export default function HomeScreen({ navigation }) {
 
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Resultados</Text>
-        <Text style={styles.sectionMeta}>{filteredProducts.length} productos encontrados</Text>
+        <Text style={styles.sectionMeta}>
+          {filteredProducts.length} productos encontrados
+        </Text>
       </View>
-
       {filteredProducts.length ? (
-        filteredProducts.map((product) => (
+        <View style={styles.resultsMetaRow}>
+          <Text style={styles.resultsMetaText}>
+            Mostrando {visibleRangeStart}-{visibleRangeEnd} de {filteredProducts.length}
+          </Text>
+          <Text style={styles.resultsMetaText}>Pagina {currentPageSafe} de {totalPages}</Text>
+        </View>
+      ) : null}
+
+      {paginatedProducts.length ? (
+        paginatedProducts.map((product) => (
           <ProductCard
             key={product.id}
             product={product}
@@ -119,59 +161,145 @@ export default function HomeScreen({ navigation }) {
           description="Prueba otra categoria o escribe otro nombre para seguir explorando."
         />
       )}
+
+      {filteredProducts.length > PRODUCTS_PER_PAGE ? (
+        <View style={styles.paginationRow}>
+          <Pressable
+            disabled={currentPageSafe === 1}
+            onPress={() => setCurrentPage((page) => Math.max(1, page - 1))}
+            style={({ pressed }) => [
+              styles.paginationButton,
+              currentPageSafe === 1 && styles.paginationButtonDisabled,
+              pressed && currentPageSafe > 1 && styles.paginationButtonPressed,
+            ]}
+          >
+            <Text
+              style={[
+                styles.paginationButtonText,
+                currentPageSafe === 1 && styles.paginationButtonTextDisabled,
+              ]}
+            >
+              Anterior
+            </Text>
+          </Pressable>
+
+          <Pressable
+            disabled={currentPageSafe === totalPages}
+            onPress={() =>
+              setCurrentPage((page) => Math.min(totalPages, page + 1))
+            }
+            style={({ pressed }) => [
+              styles.paginationButton,
+              currentPageSafe === totalPages && styles.paginationButtonDisabled,
+              pressed &&
+                currentPageSafe < totalPages &&
+                styles.paginationButtonPressed,
+            ]}
+          >
+            <Text
+              style={[
+                styles.paginationButtonText,
+                currentPageSafe === totalPages && styles.paginationButtonTextDisabled,
+              ]}
+            >
+              Siguiente
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
     </ScreenContainer>
   );
 }
 
-const styles = StyleSheet.create({
-  content: {
-    gap: spacing.lg,
-  },
-  hero: {
-    backgroundColor: colors.primaryDark,
-    borderRadius: radius.xl,
-    padding: spacing.xxl,
-    gap: spacing.md,
-  },
-  greeting: {
-    ...typography.bodyStrong,
-    color: '#BFE7E1',
-  },
-  heroTitle: {
-    ...typography.display,
-    color: colors.white,
-  },
-  heroSubtitle: {
-    ...typography.body,
-    color: '#D9F1ED',
-  },
-  heroBadgeRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  heroBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.16)',
-  },
-  heroBadgeText: {
-    ...typography.caption,
-    color: colors.white,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  sectionTitle: {
-    ...typography.title,
-    color: colors.text,
-  },
-  sectionMeta: {
-    ...typography.caption,
-    color: colors.muted,
-  },
-});
+const createStyles = ({ colors, radius, spacing, typography }) =>
+  StyleSheet.create({
+    content: {
+      gap: spacing.lg,
+    },
+    hero: {
+      backgroundColor: colors.primaryDark,
+      borderRadius: radius.xl,
+      padding: spacing.xxl,
+      gap: spacing.md,
+    },
+    heroTitle: {
+      ...typography.display,
+      color: colors.white,
+    },
+    heroSubtitle: {
+      ...typography.body,
+      color: colors.onDarkSoft,
+    },
+    heroBadgeRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+    },
+    heroBadge: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.pill,
+      backgroundColor: colors.overlay,
+    },
+    heroBadgeText: {
+      ...typography.caption,
+      color: colors.white,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    sectionTitle: {
+      ...typography.title,
+      color: colors.text,
+    },
+    sectionMeta: {
+      ...typography.caption,
+      color: colors.muted,
+    },
+    resultsMetaRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: spacing.md,
+      marginTop: -spacing.sm,
+    },
+    resultsMetaText: {
+      ...typography.caption,
+      color: colors.muted,
+    },
+    paginationRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: spacing.md,
+      marginTop: spacing.xs,
+    },
+    paginationButton: {
+      flex: 1,
+      minHeight: 44,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: spacing.md,
+    },
+    paginationButtonPressed: {
+      opacity: 0.88,
+    },
+    paginationButtonDisabled: {
+      backgroundColor: colors.surfaceAlt,
+      borderColor: colors.border,
+      opacity: 0.55,
+    },
+    paginationButtonText: {
+      ...typography.bodyStrong,
+      color: colors.text,
+    },
+    paginationButtonTextDisabled: {
+      color: colors.muted,
+    },
+  });

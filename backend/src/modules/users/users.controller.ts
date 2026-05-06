@@ -1,4 +1,6 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { RequestLike } from '../audit/interfaces/audit-request-context.interface';
+import { buildAuditRequestContext } from '../audit/utils/build-audit-request-context';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -36,7 +38,12 @@ export class UsersController {
   create(
     @Body() payload: CreateUserDto,
     @CurrentUser() currentUser: AuthenticatedUser,
+    @Req() request: RequestLike,
   ) {
-    return this.usersService.create(currentUser, payload);
+    return this.usersService.create(
+      currentUser,
+      payload,
+      buildAuditRequestContext(request),
+    );
   }
 }

@@ -1,5 +1,13 @@
 [
   {
+    "id": "usr-000",
+    "name": "Super Admin",
+    "username": "superadmin",
+    "password": "SuperAdmin123*",
+    "role": "superadmin",
+    "email": "superadmin@biess.local"
+  },
+  {
     "id": "usr-001",
     "name": "Admin Principal",
     "username": "admin",
@@ -14,5 +22,29 @@
     "password": "Cliente123*",
     "role": "customer",
     "email": "cliente@biess.local"
+  },
+  {
+    "id": "usr-003",
+    "name": "Maria Lopez",
+    "username": "maria.vendedora",
+    "password": "Maria123*",
+    "role": "seller",
+    "email": "maria.vendedora@biess.local"
+  },
+  {
+    "id": "usr-004",
+    "name": "Carlos Perez",
+    "username": "carlos.vendedor",
+    "password": "Carlos123*",
+    "role": "seller",
+    "email": "carlos.vendedor@biess.local"
+  },
+  {
+    "id": "usr-005",
+    "name": "Lucia Mendoza",
+    "username": "lucia.vendedora",
+    "password": "Lucia123*",
+    "role": "seller",
+    "email": "lucia.vendedora@biess.local"
   }
 ]

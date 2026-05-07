@@ -1,4 +1,8 @@
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createTransport, Transporter } from 'nodemailer';
 
@@ -23,30 +27,48 @@ export class MailService {
       this.configService.get<string>('SMTP_FROM_NAME')?.trim() || input.appName.trim();
     const fromAddress = `${fromName} <${input.fromEmail.trim().toLowerCase()}>`;
 
-    await transporter.sendMail({
-      from: fromAddress,
-      to: input.toEmail.trim().toLowerCase(),
-      subject: `${input.appName} | Recuperacion de clave`,
-      text: [
-        `Hola ${input.recipientName},`,
-        '',
-        'Recibimos una solicitud para restablecer tu clave.',
-        `Tu codigo de recuperacion es: ${input.code}`,
-        `Este codigo expira en ${input.expiresInMinutes} minuto(s).`,
-        '',
-        'Abre la aplicacion, ingresa este codigo y luego define tu nueva clave.',
-        '',
-        `Si no solicitaste este cambio, ignora este mensaje o contacta a ${input.fromEmail}.`,
-      ].join('\n'),
-      html: [
-        `<p>Hola ${this.escapeHtml(input.recipientName)},</p>`,
-        '<p>Recibimos una solicitud para restablecer tu clave.</p>',
-        `<p><strong>Codigo de recuperacion:</strong> <span style="font-size:18px;letter-spacing:2px;">${this.escapeHtml(input.code)}</span></p>`,
-        `<p>Este codigo expira en <strong>${input.expiresInMinutes} minuto(s)</strong>.</p>`,
-        '<p>Abre la aplicacion, ingresa este codigo y luego define tu nueva clave.</p>',
-        `<p>Si no solicitaste este cambio, ignora este mensaje o contacta a ${this.escapeHtml(input.fromEmail)}.</p>`,
-      ].join(''),
-    });
+    try {
+      await transporter.sendMail({
+        from: fromAddress,
+        to: input.toEmail.trim().toLowerCase(),
+        subject: `${input.appName} | Recuperacion de clave`,
+        text: [
+          `Hola ${input.recipientName},`,
+          '',
+          'Recibimos una solicitud para restablecer tu clave.',
+          `Tu codigo de recuperacion es: ${input.code}`,
+          `Este codigo expira en ${input.expiresInMinutes} minuto(s).`,
+          '',
+          'Abre la aplicacion, ingresa este codigo y luego define tu nueva clave.',
+          '',
+          `Si no solicitaste este cambio, ignora este mensaje o contacta a ${input.fromEmail}.`,
+        ].join('\n'),
+        html: [
+          `<p>Hola ${this.escapeHtml(input.recipientName)},</p>`,
+          '<p>Recibimos una solicitud para restablecer tu clave.</p>',
+          `<p><strong>Codigo de recuperacion:</strong> <span style="font-size:18px;letter-spacing:2px;">${this.escapeHtml(input.code)}</span></p>`,
+          `<p>Este codigo expira en <strong>${input.expiresInMinutes} minuto(s)</strong>.</p>`,
+          '<p>Abre la aplicacion, ingresa este codigo y luego define tu nueva clave.</p>',
+          `<p>Si no solicitaste este cambio, ignora este mensaje o contacta a ${this.escapeHtml(input.fromEmail)}.</p>`,
+        ].join(''),
+      });
+    } catch (error) {
+      const smtpUser =
+        this.configService.get<string>('SMTP_USER')?.trim().toLowerCase() || 'sin-configurar';
+      const details =
+        error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+
+      console.error('[MAIL][PASSWORD_RESET]', {
+        fromAddress,
+        smtpUser,
+        toEmail: input.toEmail.trim().toLowerCase(),
+        details,
+      });
+
+      throw new InternalServerErrorException(
+        'No fue posible enviar el correo de recuperacion. Verifica la configuracion SMTP del servidor.',
+      );
+    }
   }
 
   private getTransporter() {

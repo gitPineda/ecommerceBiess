@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createTransport, Transporter } from 'nodemailer';
+import { resolve4 } from 'node:dns/promises';
+import { isIP } from 'node:net';
 
 type PasswordResetEmailInput = {
   fromEmail: string;
@@ -22,7 +24,7 @@ export class MailService {
   constructor(private readonly configService: ConfigService) {}
 
   async sendPasswordResetCodeEmail(input: PasswordResetEmailInput) {
-    const transporter = this.getTransporter();
+    const transporter = await this.getTransporter();
     const fromName =
       this.configService.get<string>('SMTP_FROM_NAME')?.trim() || input.appName.trim();
     const fromAddress = `${fromName} <${input.fromEmail.trim().toLowerCase()}>`;
@@ -71,7 +73,7 @@ export class MailService {
     }
   }
 
-  private getTransporter() {
+  private async getTransporter() {
     if (this.transporter) {
       return this.transporter;
     }
@@ -88,14 +90,41 @@ export class MailService {
       );
     }
 
+    let smtpHost = host;
+    let servername: string | undefined;
+
+    if (!isIP(host)) {
+      try {
+        const ipv4Addresses = await resolve4(host);
+
+        if (ipv4Addresses.length > 0) {
+          smtpHost = ipv4Addresses[0];
+          servername = host;
+        }
+      } catch (error) {
+        const details =
+          error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+
+        console.warn('[MAIL][SMTP_DNS_IPV4_FALLBACK]', {
+          host,
+          details,
+        });
+      }
+    }
+
     this.transporter = createTransport({
-      host,
+      host: smtpHost,
       port,
       secure,
       auth: {
         user,
         pass,
       },
+      tls: servername
+        ? {
+            servername,
+          }
+        : undefined,
     });
 
     return this.transporter;

@@ -5,6 +5,7 @@ import AppTextInput from '../../components/AppTextInput';
 import ErrorBanner from '../../components/ErrorBanner';
 import PrimaryButton from '../../components/PrimaryButton';
 import ScreenContainer from '../../components/ScreenContainer';
+import UserCommercialFields from '../../components/UserCommercialFields';
 import brand from '../../config/brand.json';
 import { ROLE_OPTIONS, getRoleLabel, isAdminRole } from '../../config/roles';
 import { useAppStore } from '../../store/AppStore';
@@ -16,6 +17,12 @@ const INITIAL_FORM = {
   email: '',
   password: '',
   role: brand.roles.customer,
+  cedulaRuc: '',
+  direccion: '',
+  ciudad: '',
+  cuentaBancaria: '',
+  cuentaPayphone: '',
+  verificado: false,
 };
 
 export default function UserManagementScreen() {
@@ -25,6 +32,7 @@ export default function UserManagementScreen() {
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const isSeller = form.role === brand.roles.seller;
 
   function updateField(key, value) {
     setForm((current) => ({
@@ -40,6 +48,17 @@ export default function UserManagementScreen() {
 
     if (form.password.length < 6) {
       return 'La clave debe tener al menos 6 caracteres.';
+    }
+
+    if (
+      isSeller &&
+      (!form.cedulaRuc.trim() ||
+        !form.direccion.trim() ||
+        !form.ciudad.trim() ||
+        !form.cuentaBancaria.trim() ||
+        !form.cuentaPayphone.trim())
+    ) {
+      return 'Para crear un vendedor completa cedula/RUC, direccion, ciudad, cuenta bancaria y cuenta PayPhone.';
     }
 
     return '';
@@ -115,6 +134,12 @@ export default function UserManagementScreen() {
           onChange={(value) => updateField('role', value)}
         />
 
+        <UserCommercialFields
+          form={form}
+          isSeller={isSeller}
+          onChange={updateField}
+        />
+
         <PrimaryButton title="Guardar usuario" onPress={handleSave} loading={isSaving} />
       </View>
 
@@ -129,6 +154,11 @@ export default function UserManagementScreen() {
               <Text style={styles.userMeta}>
                 @{item.username} | {item.email}
               </Text>
+              {item.ciudad || item.cedulaRuc ? (
+                <Text style={styles.userMeta}>
+                  {item.ciudad || 'Sin ciudad'} | {item.cedulaRuc || 'Sin cedula/RUC'}
+                </Text>
+              ) : null}
             </View>
             <View
               style={[

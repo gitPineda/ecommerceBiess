@@ -1,0 +1,10 @@
+ALTER TABLE "User"
+  ADD COLUMN IF NOT EXISTS "cedulaRuc" VARCHAR(20),
+  ADD COLUMN IF NOT EXISTS "direccion" VARCHAR(255),
+  ADD COLUMN IF NOT EXISTS "ciudad" VARCHAR(120),
+  ADD COLUMN IF NOT EXISTS "cuentaBancaria" VARCHAR(80),
+  ADD COLUMN IF NOT EXISTS "cuentaPayphone" VARCHAR(80),
+  ADD COLUMN IF NOT EXISTS "verificado" BOOLEAN NOT NULL DEFAULT false;
+
+CREATE INDEX IF NOT EXISTS "User_cedulaRuc_idx" ON "User"("cedulaRuc");
+CREATE INDEX IF NOT EXISTS "User_verificado_idx" ON "User"("verificado");

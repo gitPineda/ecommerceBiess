@@ -519,6 +519,12 @@ export function AppStoreProvider({ children }) {
             email,
             password: payload.password,
             role: payload.role || brand.roles.customer,
+            cedulaRuc: payload.cedulaRuc,
+            direccion: payload.direccion,
+            ciudad: payload.ciudad,
+            cuentaBancaria: payload.cuentaBancaria,
+            cuentaPayphone: payload.cuentaPayphone,
+            verificado: payload.verificado,
           },
           {
             accessToken: state.authToken,
@@ -533,6 +539,12 @@ export function AppStoreProvider({ children }) {
           password: payload.password,
           role: payload.role || brand.roles.customer,
           email,
+          cedulaRuc: payload.cedulaRuc?.trim() || '',
+          direccion: payload.direccion?.trim() || '',
+          ciudad: payload.ciudad?.trim() || '',
+          cuentaBancaria: payload.cuentaBancaria?.trim() || '',
+          cuentaPayphone: payload.cuentaPayphone?.trim() || '',
+          verificado: Boolean(payload.verificado),
         };
 
     dispatch({ type: 'ADD_USER', payload: user });
@@ -554,6 +566,12 @@ export function AppStoreProvider({ children }) {
         email,
         password: payload.password,
         role: payload.role || brand.roles.customer,
+        cedulaRuc: payload.cedulaRuc,
+        direccion: payload.direccion,
+        ciudad: payload.ciudad,
+        cuentaBancaria: payload.cuentaBancaria,
+        cuentaPayphone: payload.cuentaPayphone,
+        verificado: payload.verificado,
       },
       state.users,
     );

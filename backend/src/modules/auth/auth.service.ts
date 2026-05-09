@@ -44,6 +44,14 @@ type CompanyBrandingSelection = {
   supportEmail: string;
 };
 
+const SELLER_REQUIRED_FIELDS = [
+  ['cedulaRuc', 'cedula/RUC'],
+  ['direccion', 'direccion'],
+  ['ciudad', 'ciudad'],
+  ['cuentaBancaria', 'cuenta bancaria'],
+  ['cuentaPayphone', 'cuenta PayPhone'],
+] as const;
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -56,6 +64,7 @@ export class AuthService {
   async register(payload: RegisterDto, auditContext?: AuditRequestContext) {
     const normalizedEmail = this.normalizeEmail(payload.email);
     const normalizedUsername = payload.username.trim().toLowerCase();
+    this.assertSellerCommercialFields(payload);
     const existingUsers = await this.prisma.user.findMany({
       where: {
         OR: [{ email: normalizedEmail }, { username: normalizedUsername }],
@@ -108,6 +117,12 @@ export class AuthService {
         username: normalizedUsername,
         email: normalizedEmail,
         phoneNumber: payload.phoneNumber?.trim() || null,
+        cedulaRuc: this.normalizeOptionalText(payload.cedulaRuc),
+        direccion: this.normalizeOptionalText(payload.direccion),
+        ciudad: this.normalizeOptionalText(payload.ciudad),
+        cuentaBancaria: this.normalizeOptionalText(payload.cuentaBancaria),
+        cuentaPayphone: this.normalizeOptionalText(payload.cuentaPayphone),
+        verificado: false,
         passwordHash,
         role: mapAppRoleToPrisma(payload.role),
       },
@@ -450,6 +465,12 @@ export class AuthService {
         username: user.username,
         email: user.email,
         phoneNumber: user.phoneNumber,
+        cedulaRuc: user.cedulaRuc,
+        direccion: user.direccion,
+        ciudad: user.ciudad,
+        cuentaBancaria: user.cuentaBancaria,
+        cuentaPayphone: user.cuentaPayphone,
+        verificado: user.verificado,
         role,
         sellerRating: Number(metricAwareUser.sellerRating),
         sellerStarsTotal: metricAwareUser.sellerStarsTotal,
@@ -464,6 +485,26 @@ export class AuthService {
 
   private normalizeEmail(email: string) {
     return email.trim().toLowerCase();
+  }
+
+  private assertSellerCommercialFields(payload: RegisterDto) {
+    if (payload.role !== 'seller') {
+      return;
+    }
+
+    const missingFields = SELLER_REQUIRED_FIELDS.filter(
+      ([field]) => !String(payload[field] || '').trim(),
+    ).map(([, label]) => label);
+
+    if (missingFields.length) {
+      throw new BadRequestException(
+        `Para crear un vendedor completa: ${missingFields.join(', ')}.`,
+      );
+    }
+  }
+
+  private normalizeOptionalText(value?: string) {
+    return value?.trim() || null;
   }
 
   private normalizeResetCode(code: string) {

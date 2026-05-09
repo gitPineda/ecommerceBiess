@@ -23,6 +23,14 @@ type UserWithSellerMetrics = User & {
   sellerRatedProductsCount: number;
 };
 
+const SELLER_REQUIRED_FIELDS = [
+  ['cedulaRuc', 'cedula/RUC'],
+  ['direccion', 'direccion'],
+  ['ciudad', 'ciudad'],
+  ['cuentaBancaria', 'cuenta bancaria'],
+  ['cuentaPayphone', 'cuenta PayPhone'],
+] as const;
+
 @Injectable()
 export class UsersService {
   constructor(
@@ -86,6 +94,7 @@ export class UsersService {
 
     const email = payload.email.trim().toLowerCase();
     const username = payload.username.trim().toLowerCase();
+    this.assertSellerCommercialFields(payload);
 
     const existingUsers = await this.prisma.user.findMany({
       where: {
@@ -143,6 +152,12 @@ export class UsersService {
         username,
         email,
         phoneNumber: payload.phoneNumber?.trim() || null,
+        cedulaRuc: this.normalizeOptionalText(payload.cedulaRuc),
+        direccion: this.normalizeOptionalText(payload.direccion),
+        ciudad: this.normalizeOptionalText(payload.ciudad),
+        cuentaBancaria: this.normalizeOptionalText(payload.cuentaBancaria),
+        cuentaPayphone: this.normalizeOptionalText(payload.cuentaPayphone),
+        verificado: Boolean(payload.verificado),
         passwordHash: await hash(payload.password, 10),
         role: mapAppRoleToPrisma(payload.role),
       },
@@ -178,6 +193,12 @@ export class UsersService {
       username: user.username,
       email: user.email,
       phoneNumber: user.phoneNumber,
+      cedulaRuc: user.cedulaRuc,
+      direccion: user.direccion,
+      ciudad: user.ciudad,
+      cuentaBancaria: user.cuentaBancaria,
+      cuentaPayphone: user.cuentaPayphone,
+      verificado: user.verificado,
       role: mapPrismaRole(user.role),
       sellerRating: Number(sellerAwareUser.sellerRating),
       sellerStarsTotal: sellerAwareUser.sellerStarsTotal,
@@ -185,5 +206,25 @@ export class UsersService {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
+  }
+
+  private assertSellerCommercialFields(payload: CreateUserDto) {
+    if (payload.role !== 'seller') {
+      return;
+    }
+
+    const missingFields = SELLER_REQUIRED_FIELDS.filter(
+      ([field]) => !String(payload[field] || '').trim(),
+    ).map(([, label]) => label);
+
+    if (missingFields.length) {
+      throw new BadRequestException(
+        `Para crear un vendedor completa: ${missingFields.join(', ')}.`,
+      );
+    }
+  }
+
+  private normalizeOptionalText(value?: string) {
+    return value?.trim() || null;
   }
 }

@@ -5,7 +5,13 @@
     "username": "superadmin",
     "password": "SuperAdmin123*",
     "role": "superadmin",
-    "email": "superadmin@biess.local"
+    "email": "superadmin@biess.local",
+    "cedulaRuc": "",
+    "direccion": "",
+    "ciudad": "",
+    "cuentaBancaria": "",
+    "cuentaPayphone": "",
+    "verificado": true
   },
   {
     "id": "usr-001",
@@ -13,7 +19,13 @@
     "username": "admin",
     "password": "Admin123*",
     "role": "admin",
-    "email": "admin@biess.local"
+    "email": "admin@biess.local",
+    "cedulaRuc": "",
+    "direccion": "",
+    "ciudad": "",
+    "cuentaBancaria": "",
+    "cuentaPayphone": "",
+    "verificado": true
   },
   {
     "id": "usr-002",
@@ -21,7 +33,13 @@
     "username": "cliente",
     "password": "Cliente123*",
     "role": "customer",
-    "email": "cliente@biess.local"
+    "email": "cliente@biess.local",
+    "cedulaRuc": "0912345678",
+    "direccion": "Av. Principal y Calle 10",
+    "ciudad": "Guayaquil",
+    "cuentaBancaria": "",
+    "cuentaPayphone": "",
+    "verificado": false
   },
   {
     "id": "usr-003",
@@ -29,7 +47,13 @@
     "username": "maria.vendedora",
     "password": "Maria123*",
     "role": "seller",
-    "email": "maria.vendedora@biess.local"
+    "email": "maria.vendedora@biess.local",
+    "cedulaRuc": "0911122233001",
+    "direccion": "Av. Amazonas N34-120",
+    "ciudad": "Quito",
+    "cuentaBancaria": "Banco Pichincha 2200112233",
+    "cuentaPayphone": "maria.vendedora@payphone",
+    "verificado": true
   },
   {
     "id": "usr-004",
@@ -37,7 +61,13 @@
     "username": "carlos.vendedor",
     "password": "Carlos123*",
     "role": "seller",
-    "email": "carlos.vendedor@biess.local"
+    "email": "carlos.vendedor@biess.local",
+    "cedulaRuc": "0922233344001",
+    "direccion": "Cdla. Kennedy Norte Mz. 12",
+    "ciudad": "Guayaquil",
+    "cuentaBancaria": "Banco Guayaquil 3300221144",
+    "cuentaPayphone": "carlos.vendedor@payphone",
+    "verificado": true
   },
   {
     "id": "usr-005",
@@ -45,6 +75,12 @@
     "username": "lucia.vendedora",
     "password": "Lucia123*",
     "role": "seller",
-    "email": "lucia.vendedora@biess.local"
+    "email": "lucia.vendedora@biess.local",
+    "cedulaRuc": "0933344455001",
+    "direccion": "Calle Larga 7-45",
+    "ciudad": "Cuenca",
+    "cuentaBancaria": "Banco Austro 4400332255",
+    "cuentaPayphone": "lucia.vendedora@payphone",
+    "verificado": false
   }
 ]

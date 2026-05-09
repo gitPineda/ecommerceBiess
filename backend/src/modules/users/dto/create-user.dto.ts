@@ -1,4 +1,11 @@
-import { IsEmail, IsIn, IsOptional, IsString, MinLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsEmail,
+  IsIn,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
@@ -27,4 +34,28 @@ export class CreateUserDto {
   @IsString()
   @IsIn(['superadmin', 'admin', 'seller', 'customer'])
   role!: 'superadmin' | 'admin' | 'seller' | 'customer';
+
+  @IsOptional()
+  @IsString()
+  cedulaRuc?: string;
+
+  @IsOptional()
+  @IsString()
+  direccion?: string;
+
+  @IsOptional()
+  @IsString()
+  ciudad?: string;
+
+  @IsOptional()
+  @IsString()
+  cuentaBancaria?: string;
+
+  @IsOptional()
+  @IsString()
+  cuentaPayphone?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  verificado?: boolean;
 }

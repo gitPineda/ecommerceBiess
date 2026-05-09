@@ -9,6 +9,17 @@ function sanitizeUser(user) {
   return safeUser;
 }
 
+function buildCommercialUserPayload(payload) {
+  return {
+    cedulaRuc: payload.cedulaRuc?.trim() || undefined,
+    direccion: payload.direccion?.trim() || undefined,
+    ciudad: payload.ciudad?.trim() || undefined,
+    cuentaBancaria: payload.cuentaBancaria?.trim() || undefined,
+    cuentaPayphone: payload.cuentaPayphone?.trim() || undefined,
+    verificado: Boolean(payload.verificado),
+  };
+}
+
 function assertRoleScopedUserAvailability(payload, users = []) {
   const normalizedEmail = payload.email.trim().toLowerCase();
   const normalizedUsername = payload.username.trim().toLowerCase();
@@ -129,6 +140,11 @@ export async function registerPublicUser(payload, users = []) {
         username: payload.username.trim().toLowerCase(),
         email: payload.email.trim().toLowerCase(),
         phoneNumber: payload.phoneNumber?.trim() || undefined,
+        cedulaRuc: payload.cedulaRuc?.trim() || undefined,
+        direccion: payload.direccion?.trim() || undefined,
+        ciudad: payload.ciudad?.trim() || undefined,
+        cuentaBancaria: payload.cuentaBancaria?.trim() || undefined,
+        cuentaPayphone: payload.cuentaPayphone?.trim() || undefined,
         password: payload.password,
         role: payload.role,
       },
@@ -156,6 +172,12 @@ export async function registerPublicUser(payload, users = []) {
     email: normalizedEmail,
     password: payload.password,
     role: payload.role || 'customer',
+    cedulaRuc: payload.cedulaRuc?.trim() || '',
+    direccion: payload.direccion?.trim() || '',
+    ciudad: payload.ciudad?.trim() || '',
+    cuentaBancaria: payload.cuentaBancaria?.trim() || '',
+    cuentaPayphone: payload.cuentaPayphone?.trim() || '',
+    verificado: false,
   };
 }
 
@@ -170,6 +192,7 @@ export async function createManagedUser(payload, session, users = []) {
         username: payload.username.trim().toLowerCase(),
         email: payload.email.trim().toLowerCase(),
         phoneNumber: payload.phoneNumber?.trim() || undefined,
+        ...buildCommercialUserPayload(payload),
         password: payload.password,
         role: payload.role,
       },
@@ -196,6 +219,12 @@ export async function createManagedUser(payload, session, users = []) {
     email: normalizedEmail,
     password: payload.password,
     role: payload.role,
+    cedulaRuc: payload.cedulaRuc?.trim() || '',
+    direccion: payload.direccion?.trim() || '',
+    ciudad: payload.ciudad?.trim() || '',
+    cuentaBancaria: payload.cuentaBancaria?.trim() || '',
+    cuentaPayphone: payload.cuentaPayphone?.trim() || '',
+    verificado: Boolean(payload.verificado),
   };
 }
 

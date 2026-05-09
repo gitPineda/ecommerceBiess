@@ -1,4 +1,10 @@
-import { IsEmail, IsIn, IsOptional, IsString, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsIn,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 export class RegisterDto {
   @IsString()
@@ -27,4 +33,25 @@ export class RegisterDto {
   @IsString()
   @IsIn(['superadmin', 'admin', 'seller', 'customer'])
   role!: 'superadmin' | 'admin' | 'seller' | 'customer';
+
+  @IsOptional()
+  @IsString()
+  cedulaRuc?: string;
+
+  @IsOptional()
+  @IsString()
+  direccion?: string;
+
+  @IsOptional()
+  @IsString()
+  ciudad?: string;
+
+  @IsOptional()
+  @IsString()
+  cuentaBancaria?: string;
+
+  @IsOptional()
+  @IsString()
+  cuentaPayphone?: string;
+
 }

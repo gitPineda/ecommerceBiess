@@ -5,12 +5,14 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  View,
 } from 'react-native';
 import AppSelectInput from '../components/AppSelectInput';
 import AppTextInput from '../components/AppTextInput';
 import ErrorBanner from '../components/ErrorBanner';
 import PrimaryButton from '../components/PrimaryButton';
 import ScreenContainer from '../components/ScreenContainer';
+import UserCommercialFields from '../components/UserCommercialFields';
 import brand from '../config/brand.json';
 import { ROLE_OPTIONS } from '../config/roles';
 import { useAppStore } from '../store/AppStore';
@@ -22,6 +24,12 @@ const INITIAL_FORM = {
   email: '',
   password: '',
   role: brand.roles.customer,
+  cedulaRuc: '',
+  direccion: '',
+  ciudad: '',
+  cuentaBancaria: '',
+  cuentaPayphone: '',
+  verificado: false,
 };
 
 export default function CreateUserScreen({ navigation }) {
@@ -30,6 +38,7 @@ export default function CreateUserScreen({ navigation }) {
   const [form, setForm] = useState(INITIAL_FORM);
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const isSeller = form.role === brand.roles.seller;
 
   function updateField(key, value) {
     setForm((current) => ({
@@ -54,6 +63,17 @@ export default function CreateUserScreen({ navigation }) {
 
     if (form.password.length < 6) {
       return 'La clave debe tener al menos 6 caracteres.';
+    }
+
+    if (
+      isSeller &&
+      (!form.cedulaRuc.trim() ||
+        !form.direccion.trim() ||
+        !form.ciudad.trim() ||
+        !form.cuentaBancaria.trim() ||
+        !form.cuentaPayphone.trim())
+    ) {
+      return 'Para crear un vendedor completa cedula/RUC, direccion, ciudad, cuenta bancaria y cuenta PayPhone.';
     }
 
     return '';
@@ -84,6 +104,12 @@ export default function CreateUserScreen({ navigation }) {
         email: form.email.trim(),
         password: form.password,
         role: form.role,
+        cedulaRuc: form.cedulaRuc.trim(),
+        direccion: form.direccion.trim(),
+        ciudad: form.ciudad.trim(),
+        cuentaBancaria: form.cuentaBancaria.trim(),
+        cuentaPayphone: form.cuentaPayphone.trim(),
+        verificado: false,
       });
 
       navigation.navigate('Login', {
@@ -150,6 +176,13 @@ export default function CreateUserScreen({ navigation }) {
             value={form.role}
             options={ROLE_OPTIONS}
             onChange={(value) => updateField('role', value)}
+          />
+
+          <UserCommercialFields
+            form={form}
+            isSeller={isSeller}
+            onChange={updateField}
+            showVerification={false}
           />
 
           <PrimaryButton
